@@ -1,0 +1,26 @@
+{
+  "name": "octocoon",
+  "app_vsn": "1.0.0",
+  "drop_unknown_deps": true,
+  "with_source": true,
+  "deps": [
+    {
+      "name": "cowboy",
+      "url": "https://github.com/ninenines/cowboy.git",
+      "tag": "2.0.0-pre.9"
+    },
+    {
+      "name": "jsone",
+      "url": "https://github.com/sile/jsone.git",
+      "tag": "v0.3.3"
+    },
+    {
+      "name": "erlexec",
+      "url": "https://github.com/saleyn/erlexec.git",
+      "tag": "1.6.4"
+    }
+  ],
+  "prebuild": [],
+  "build_vars": [],
+  "c_build_vars": []
+}
