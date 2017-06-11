@@ -57,8 +57,9 @@ start_link() ->
   ignore |
   {error, Reason :: term()}).
 init([]) ->
-  DaemonsSup = ?CHILD(oc_namespace_limiter, worker),
-  {ok, {{one_for_one, 1000, 3600}, [DaemonsSup]}}.
+  NSLimiter = ?CHILD(oc_namespace_limiter, worker),
+  ResourceHolder = ?CHILD(oc_resource_holder, worker),
+  {ok, {{one_for_one, 1000, 3600}, [NSLimiter, ResourceHolder]}}.
 
 %%%===================================================================
 %%% Internal functions

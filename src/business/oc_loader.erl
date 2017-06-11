@@ -23,6 +23,7 @@
 -spec add_package(map()) -> true.
 add_package(#{?REF_NAME := Tag, ?REF_TYPE := <<"tag">>, ?REPO_INFO := Repo}) ->
   #{<<"clone_url">> := Url, <<"full_name">> := Name} = Repo,
+  % TODO get user email
   case oc_namespace_limiter:check_package(Name) of
     true ->
       Path = clone_package(binary_to_list(Name), Url, Tag),
@@ -31,6 +32,7 @@ add_package(#{?REF_NAME := Tag, ?REF_TYPE := <<"tag">>, ?REPO_INFO := Repo}) ->
     false ->
       % TODO save to disc and proceed build later?
       % TODO log this
+      % TODO send build postponed email
       throw({error, ?REACH_NS_LIMIT})
   end;
 add_package(_) ->  % make only tag support configurable?
@@ -87,7 +89,7 @@ get_package_if_succeed(Output) ->
   Filtered = lists:dropwhile(fun(L) -> string:str(binary_to_list(L), "create package") == 0 end, Output),
   case Filtered of
     [] ->
-      io:format("~s~n", [Output]),
+      io:format("~p~n", [Output]),
       throw({error, ?BUILD_FAILURE});
     [First | _] -> % normally it should be one
       PackPath = lists:last(string:tokens(binary_to_list(First), " ")),

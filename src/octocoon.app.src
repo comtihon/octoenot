@@ -17,6 +17,12 @@
            }
       },
       {build_per_minutes, 1},
-      {build_dir, "/tmp/octocoon"}
+      {build_dir, "/tmp/octocoon"},
+      {email,
+          #{
+              username => "test@gmail.com",
+              password => "test_password"
+           }
+      }
     ]}
 ]}.

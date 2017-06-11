@@ -18,6 +18,11 @@
       "name": "erlexec",
       "url": "https://github.com/saleyn/erlexec.git",
       "tag": "1.6.4"
+    },
+    {
+      "name": "gen_smtp",
+      "url": "https://github.com/Vagabond/gen_smtp.git",
+      "tag": "0.12.0"
     }
   ],
   "prebuild": [],
