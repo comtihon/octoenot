@@ -2,7 +2,7 @@
   {description, ""},
   {vsn, "{{ app.vsn }}"},
   {registered, []},
-  {applications, {{ app.std_apps + app.apps }}},
+  {applications, {{ app.std_apps + app.apps + ['inets'] }}},
   {modules, {{ modules }}},
   {mod, {'octocoon_app', []}},
   {env,
@@ -10,10 +10,10 @@
       {http_port, 4567},
       {artifactory,
           #{
-              host => "http://localhost:8081/artifactory/",
+              host => "http://localhost:8081/artifactory",
               user => "admin",
               password => "password",
-              repo =>"example-repo-local"
+              repo => "example-repo-local"
            }
       },
       {build_per_minutes, 1},

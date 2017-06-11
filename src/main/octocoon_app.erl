@@ -26,6 +26,7 @@
 start(_StartType, _StartArgs) ->
   case 'octocoon_sup':start_link() of
     {ok, Pid} ->
+      ok = oc_artifactory_mngr:init(),
       ok = oc_handler_mngr:init(),
       {ok, Pid};
     Error ->

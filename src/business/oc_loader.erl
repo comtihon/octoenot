@@ -59,8 +59,17 @@ clone_package(Name, Url, Tag) ->
 build_package(Path) ->
   Cmd = lists:flatten(io_lib:format(?PACKAGE_CMD, [Path])),
   io:format("run ~s~n", [Cmd]),
-  Res = os:cmd(Cmd), % exec not working here. Probably related to calling python, calling erlang
-  get_package_if_succeed(Res).
+  try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
+    {ok, Res} ->
+      io:format("out ~p~n", [Res]),
+      Stdout = proplists:get_value(stdout, Res), % TODO send to email, save attempt to db, send to http response
+      get_package_if_succeed(Stdout);
+    {error, Err} ->
+      clone_error(Cmd, Err)
+  catch
+    _:Err ->
+      clone_error(Cmd, Err)
+  end.
 
 %% @private
 clone_error(Cmd, Err) ->
@@ -71,14 +80,16 @@ clone_error(Cmd, Err) ->
   throw({error, ?CLONE_FAILURE}).
 
 %% @private
--spec get_package_if_succeed(string()) -> string().
+-spec get_package_if_succeed(list(binary())) -> string().
+get_package_if_succeed(undefined) ->
+   throw({error, ?BUILD_FAILURE});
 get_package_if_succeed(Output) ->
-  Lines = string:tokens(Output, "\n"),
-  Filtered = lists:dropwhile(fun(L) -> string:str(L, "create package") == 0 end, Lines),
+  Filtered = lists:dropwhile(fun(L) -> string:str(binary_to_list(L), "create package") == 0 end, Output),
   case Filtered of
     [] ->
       io:format("~s~n", [Output]),
       throw({error, ?BUILD_FAILURE});
     [First | _] -> % normally it should be one
-      lists:last(string:tokens(First, " "))
+      PackPath = lists:last(string:tokens(binary_to_list(First), " ")),
+      string:strip(PackPath, right, $\n)
   end.
