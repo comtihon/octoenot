@@ -2,43 +2,82 @@
 %%% @author tihon
 %%% @copyright (C) 2017, <COMPANY>
 %%% @doc
-%%%
+%%% Clone git project, build it, generate a package and load to remote
 %%% @end
-%%% Created : 04. Jun 2017 18:48
+%%% Created : 11. Jun 2017 15:43
 %%%-------------------------------------------------------------------
 -module(oc_loader).
 -author("tihon").
 
 -include("oc_error.hrl").
--define(REF_NAME, <<"ref">>).
--define(REF_TYPE, <<"ref_type">>).
--define(REPO_INFO, <<"repository">>).
+
+-behaviour(gen_server).
+
+%% API
+-export([start_link/1, load_package_async/4]).
+
+%% gen_server callbacks
+-export([init/1,
+  handle_call/3,
+  handle_cast/2,
+  handle_info/2,
+  terminate/2,
+  code_change/3]).
 
 -define(CLONE_CMD, "git clone -b ~s ~s ~s").
 -define(PACKAGE_CMD, "cd ~s; coon package").
+-define(SERVER, ?MODULE).
 
-%% API
--export([add_package/1]).
+-record(state, {}).
 
--spec add_package(map()) -> true.
-add_package(#{?REF_NAME := Tag, ?REF_TYPE := <<"tag">>, ?REPO_INFO := Repo}) ->
-  #{<<"clone_url">> := Url, <<"full_name">> := Name} = Repo,
-  % TODO get user email
-  case oc_namespace_limiter:check_package(Name) of
-    true ->
-      Path = clone_package(binary_to_list(Name), Url, Tag),
-      Package = build_package(Path),
-      oc_artifactory_mngr:load_package(Name, Tag, Package);
-    false ->
-      % TODO save to disc and proceed build later?
-      % TODO log this
-      % TODO send build postponed email
-      throw({error, ?REACH_NS_LIMIT})
-  end;
-add_package(_) ->  % make only tag support configurable?
-  throw({error, ?TAG_ONLY}).
+%%%===================================================================
+%%% API
+%%%===================================================================
+-spec load_package_async(pid(), binary(), binary(), binary()) -> boolean().
+load_package_async(Worker, Name, Url, Tag) ->
+  gen_server:cast(Worker, {load, Name, Url, Tag}).
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Starts the server
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec(start_link(list()) ->
+  {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
+start_link(Options) ->
+  gen_server:start_link(?MODULE, Options, []).
 
+%%%===================================================================
+%%% gen_server callbacks
+%%%===================================================================
+
+init([]) ->
+  {ok, #state{}}.
+
+handle_call(_Request, _From, State) ->
+  {reply, ok, State}.
+
+handle_cast({load, Name, Url, Tag}, State) ->
+  Path = clone_package(binary_to_list(Name), Url, Tag),
+  Package = build_package(Path),
+  oc_artifactory_mngr:load_package(Name, Tag, Package),
+  {noreply, State};
+handle_cast(_Request, State) ->
+  {noreply, State}.
+
+handle_info(_Info, State) ->
+  {noreply, State}.
+
+terminate(_Reason, _State) ->
+  ok.
+
+code_change(_OldVsn, State, _Extra) ->
+  {ok, State}.
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
 %% @private
 -spec clone_package(string(), binary(), binary()) -> string().
 clone_package(Name, Url, Tag) ->
@@ -50,10 +89,15 @@ clone_package(Name, Url, Tag) ->
   try exec:run(Cmd, [sync, stderr]) of
     {ok, _} -> Path;
     {error, Err} ->
-      clone_error(Cmd, Err)
+      Code = proplists:get_value(exit_status, Err),
+      [StdErr] = proplists:get_value(stderr, Err, [undefined]),
+      io:format("~p failed (~p) with: ~n", [Cmd, Code]),
+      io:format("~s~n", [StdErr]),
+      throw({error, ?CLONE_FAILURE})
   catch
     _:Err ->
-      clone_error(Cmd, Err)
+      io:format("~p failed (~p) with: ~n", [Cmd, Err]),
+      throw({error, ?CLONE_FAILURE})
   end.
 
 %% @private
@@ -63,28 +107,24 @@ build_package(Path) ->
   io:format("run ~s~n", [Cmd]),
   try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
     {ok, Res} ->
-      io:format("out ~p~n", [Res]),
       Stdout = proplists:get_value(stdout, Res), % TODO send to email, save attempt to db, send to http response
       get_package_if_succeed(Stdout);
     {error, Err} ->
-      clone_error(Cmd, Err)
+      Code = proplists:get_value(exit_status, Err),
+      [StdErr] = proplists:get_value(stderr, Err, [undefined]),
+      io:format("~p failed (~p) with: ~n", [Cmd, Code]),
+      io:format("~s~n", [StdErr]),
+      throw({error, ?BUILD_FAILURE})
   catch
     _:Err ->
-      clone_error(Cmd, Err)
+      io:format("~p failed (~p) with: ~n", [Cmd, Err]),
+      throw({error, ?BUILD_FAILURE})
   end.
-
-%% @private
-clone_error(Cmd, Err) ->
-  Code = proplists:get_value(exit_status, Err),
-  [StdErr] = proplists:get_value(stderr, Err, [undefined]),
-  io:format("~p failed (~p) with: ~n", [Cmd, Code]),
-  io:format("~s~n", [StdErr]),
-  throw({error, ?CLONE_FAILURE}).
 
 %% @private
 -spec get_package_if_succeed(list(binary())) -> string().
 get_package_if_succeed(undefined) ->
-   throw({error, ?BUILD_FAILURE});
+  throw({error, ?BUILD_FAILURE});
 get_package_if_succeed(Output) ->
   Filtered = lists:dropwhile(fun(L) -> string:str(binary_to_list(L), "create package") == 0 end, Output),
   case Filtered of

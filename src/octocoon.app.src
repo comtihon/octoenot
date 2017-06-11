@@ -23,6 +23,17 @@
               username => "test@gmail.com",
               password => "test_password"
            }
+      },
+      {github,
+          #{
+              secret => "OkxfHxv6GtmEkrEBm4IW"
+           }
+      },
+      {loader_pool,
+          #{
+              size => 100,
+              max_overflow => 20
+           }
       }
     ]}
 ]}.

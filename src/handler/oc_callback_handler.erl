@@ -20,14 +20,12 @@ init(Req0, State) ->
   Req1 = act_callback(AllHeaders, Data, Req),
   {ok, Req1, State}.
 
-%% TODO get tag and repo name, go to repo, clone and build.
-%% TODO check namespace build limitations, not often than N in a minute
 
 %% @private
 act_callback(#{<<"x-github-event">> := <<"create">>}, Body, Req0) ->
   Payload = proplists:get_value(<<"payload">>, Body),
   Decoded = jsone:decode(Payload, [{object_format, map}]),
-  try oc_loader:add_package(Decoded) of
+  try oc_loader_mngr:add_package(Decoded) of
     true ->
       cowboy_req:reply(200, #{<<"content-type">> => <<"text/plain">>}, <<"OK">>, Req0)
   catch

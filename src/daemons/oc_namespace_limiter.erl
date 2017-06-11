@@ -32,6 +32,7 @@
 %%%===================================================================
 -spec check_package(binary()) -> boolean().
 check_package(_FullName) ->
+  %% TODO check namespace build limitations, not often than N in a minute
   true.
 
 %%--------------------------------------------------------------------

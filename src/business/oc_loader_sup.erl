@@ -1,4 +1,15 @@
--module('octocoon_sup').
+%%%-------------------------------------------------------------------
+%%% @author tihon
+%%% @copyright (C) 2017, <COMPANY>
+%%% @doc
+%%%
+%%% @end
+%%% Created : 11. Jun 2017 15:44
+%%%-------------------------------------------------------------------
+-module(oc_loader_sup).
+-author("tihon").
+
+-include("oc_loader.hrl").
 
 -behaviour(supervisor).
 
@@ -8,7 +19,7 @@
 %% Supervisor callbacks
 -export([init/1]).
 
--define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
+-define(SERVER, ?MODULE).
 
 %%%===================================================================
 %%% API functions
@@ -23,7 +34,7 @@
 -spec(start_link() ->
   {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
 start_link() ->
-  supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+  supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 %%%===================================================================
 %%% Supervisor callbacks
@@ -47,10 +58,19 @@ start_link() ->
   ignore |
   {error, Reason :: term()}).
 init([]) ->
-  DaemonsSup = ?CHILD(oc_daemons_sup, supervisor),
-  LoaderPoolSup = ?CHILD(oc_loader_sup, supervisor),
-  {ok, {{one_for_one, 1000, 3600}, [DaemonsSup, LoaderPoolSup]}}.
+  Options = form_pool_conf(),
+  WorkerOpts = [],
+  {ok, {{one_for_one, 1000, 3600}, [poolboy:child_spec(?BUILDER_POOL, Options, WorkerOpts)]}}.
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+%% @private
+form_pool_conf() ->
+  {ok, #{max_overflow := Overflow, size := Size}} = application:get_env(octocoon, loader_pool),
+  [
+    {worker_module, oc_loader},
+    {name, {local, ?BUILDER_POOL}},
+    {max_overflow, Overflow},
+    {size, Size}
+  ].
