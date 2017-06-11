@@ -33,6 +33,16 @@
       "name": "lager",
       "url": "https://github.com/erlang-lager/lager.git",
       "tag": "3.5.0"
+    },
+    {
+      "name": "sqlite3",
+      "url": "https://github.com/alexeyr/erlang-sqlite3.git",
+      "tag": "v1.1.4"
+    },
+    {
+      "name": "meck",
+      "url": "https://github.com/eproxus/meck.git",
+      "tag": "0.8.4"
     }
   ],
   "prebuild": [],

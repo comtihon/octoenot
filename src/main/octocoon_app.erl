@@ -24,12 +24,13 @@
   {ok, pid(), State :: term()} |
   {error, Reason :: term()}).
 start(_StartType, _StartArgs) ->
+  ok = oc_sqlite_mngr:init(),
+  ok = oc_artifactory_mngr:init(),
+  ok = oc_coon_mngr:init(),
+  ok = oc_email_mngr:init(),
   case 'octocoon_sup':start_link() of
     {ok, Pid} ->
-      ok = oc_artifactory_mngr:init(),
-      ok = oc_coon_mngr:init(),
       ok = oc_handler_mngr:init(),
-      ok = oc_email_mngr:init(),
       {ok, Pid};
     Error ->
       Error

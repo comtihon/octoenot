@@ -17,6 +17,7 @@
 -define(PING_PATH, "api/system/ping").
 -define(REPO_INFO_PATH, "api/storage").
 
+%% TODO install artifactory locally if not found?
 -spec init() -> ok.
 init() ->
   {ok, Conf} = application:get_env(octocoon, artifactory),
@@ -32,7 +33,7 @@ load_package(Name, Tag, Package) ->
   PackageName = get_package_name(Package),
   Path = get_package_url(Host, Repo, Name, Tag, PackageName),
   Cmd = lists:flatten(io_lib:format(?LOAD_CMD, [User, Pass, Path, Package])),
-  oc_logger:debug("run ~p~n", [Cmd]), % TODO exec
+  oc_logger:debug("run ~p", [Cmd]), % TODO exec
   os:cmd(Cmd), % TODO use erlang http client (or hackney lib)
   true.
 
@@ -43,7 +44,7 @@ is_artifactory_available(Host) ->
   case httpc:request(get, {Url, []}, [{timeout, ?CALL_TIMEOUT_MS}], []) of
     {ok, {{_, 200, _}, _, "OK"}} -> true;
     Err ->
-      oc_logger:err("Error accessing artifactory: ~p~n", [Err]),
+      oc_logger:err("Error accessing artifactory: ~p", [Err]),
       false
   end.
 
@@ -56,7 +57,7 @@ is_repo_available(Host, Repo) ->
       RepoBin = list_to_binary(Repo),
       true;
     Err ->
-      oc_logger:err("Error accessing artifactory's repo: ~p~n", [Err]),
+      oc_logger:err("Error accessing artifactory's repo: ~p", [Err]),
       false
   end.
 

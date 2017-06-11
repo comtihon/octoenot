@@ -14,16 +14,17 @@
 
 %% Check if coon presents.
 %% TODO install coon if not.
+-spec init() -> ok | error.
 init() ->
   Res = exec:run("coon -v", [sync, stdout, stderr]),
   case Res of
     {error, Err} ->
       Status = proplists:get_value(exit_status, Err),
       StdErr = proplists:get_value(stderr, Err),
-      oc_logger:err("Calling coon error(~p): ~p~n", [Status, StdErr]),
-      false;
+      oc_logger:err("Calling coon error(~p): ~p", [Status, StdErr]),
+      error;
     {ok, Reply} ->
       [Vsn] = proplists:get_value(stdout, Reply),
-      oc_logger:info("Coon vsn ~s~n", [Vsn]),
+      oc_logger:info("Coon vsn ~s", [Vsn]),
       ok
   end.

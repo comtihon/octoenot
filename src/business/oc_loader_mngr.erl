@@ -16,7 +16,7 @@
 -define(REPO_INFO, <<"repository">>).
 
 %% API
--export([add_package/1]).
+-export([add_package/1, add_package/3]).
 
 -spec add_package(map()) -> true.
 add_package(#{?REF_NAME := Tag, ?REF_TYPE := <<"tag">>, ?REPO_INFO := Repo}) ->
@@ -24,9 +24,7 @@ add_package(#{?REF_NAME := Tag, ?REF_TYPE := <<"tag">>, ?REPO_INFO := Repo}) ->
   % TODO get user email
   case oc_namespace_limiter:check_package(Name) of
     true ->
-      poolboy:transaction(?BUILDER_POOL,
-        fun(Worker) -> oc_loader:load_package_async(Worker, Name, Url, Tag) end,
-        infinity),
+      add_package(Name, Url, Tag),
       true;
     false ->
       oc_namespace_limiter:postpone_build(Name, Url, Tag),
@@ -35,3 +33,10 @@ add_package(#{?REF_NAME := Tag, ?REF_TYPE := <<"tag">>, ?REPO_INFO := Repo}) ->
   end;
 add_package(_) ->  % make only tag support configurable?
   throw({error, ?TAG_ONLY}).
+
+-spec add_package(binary(), binary(), binary()) -> ok.
+add_package(Name, Url, Tag) ->
+  poolboy:transaction(?BUILDER_POOL,
+    fun(Worker) -> oc_loader:load_package_async(Worker, Name, Url, Tag) end,
+    infinity),
+  ok.

@@ -12,6 +12,8 @@
 
 -behaviour(gen_server).
 
+-include("oc_tasks.hrl").
+
 %% API
 -export([start_link/0, check_package/1, postpone_build/3]).
 
@@ -25,9 +27,10 @@
 
 -define(SERVER, ?MODULE).
 -define(ETS, namespace_storage).
--define(CLEAN_INTERVAL, 900000). %15 min
+-define(CLEAN_INTERVAL, 900000).  %15 min
+-define(TASK_CHECK_INTERVAL, 300000).  % 5 min
 
--record(state, {}).
+-record(state, {sqlite_db :: pid()}).
 
 %%%===================================================================
 %%% API
@@ -52,7 +55,7 @@ check_package(FullName) ->
 
 -spec postpone_build(binary(), binary(), binary()) -> ok.
 postpone_build(Name, Url, Tag) ->
-  oc_logger:info("Building ~p postponed~n", [Name]),
+  oc_logger:info("Building ~p postponed", [Name]),
   gen_server:call(?MODULE, {postpone, Name, Url, Tag}),
   ok.
 
@@ -74,17 +77,24 @@ start_link() ->
 init([]) ->
   ets:new(?ETS, [named_table, {read_concurrency, true}, protected]),
   erlang:send_after(?CLEAN_INTERVAL, self(), clean),
-  {ok, #state{}}.
+  erlang:send_after(?TASK_CHECK_INTERVAL, self(), check),
+  {ok, Pid} = oc_sqlite_mngr:connect(),
+  {ok, #state{sqlite_db = Pid}}.
 
-handle_call({postpone, Name, Url, Tag}, _From, State) ->
-
-  {reply, ok, State};
+handle_call({postpone, Name, Url, Tag}, _From, State = #state{sqlite_db = Db}) ->
+  Res = oc_sqlite_mngr:add_task(Db, Name, Url, Tag),
+  {reply, Res, State};
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
 handle_cast(_Request, State) ->
   {noreply, State}.
 
+handle_info(check, State = #state{sqlite_db = Db}) ->
+  All = oc_sqlite_mngr:get_all_tasks(Db),
+  lists:foreach(fun(Task) -> restart_task(Task, Db) end, All),
+  erlang:send_after(?TASK_CHECK_INTERVAL, self(), check),
+  {noreply, State};
 handle_info(clean, State) ->
   ets:delete_all_objects(?ETS),
   erlang:send_after(?CLEAN_INTERVAL, self(), clean),
@@ -101,3 +111,12 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+%% @private
+restart_task(Db, Task) ->
+  Name = proplists:get_value(?NAME_FIELD, Task),
+  Url = proplists:get_value(?URL_FIELD, Task),
+  Tag = proplists:get_value(?TAG_FIELD, Task),
+  Now = oc_utils:now_to_timestamp(),
+  ets:insert(?ETS, {Name, Now}),
+  ok = oc_loader_mngr:add_package(Name, Url, Tag),
+  oc_sqlite_mngr:del_task(Db, Name).
