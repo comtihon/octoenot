@@ -85,18 +85,18 @@ clone_package(Name, Url, Tag) ->
   Path = filename:join([Dir, Name]),
   Cmd = lists:flatten(io_lib:format(?CLONE_CMD, [Tag, Url, Path])),
   os:cmd("rm -Rf " ++ Path),
-  io:format("run ~p~n", [Cmd]),
+  oc_logger:debug("run ~p~n", [Cmd]),
   try exec:run(Cmd, [sync, stderr]) of
     {ok, _} -> Path;
     {error, Err} ->
       Code = proplists:get_value(exit_status, Err),
       [StdErr] = proplists:get_value(stderr, Err, [undefined]),
-      io:format("~p failed (~p) with: ~n", [Cmd, Code]),
-      io:format("~s~n", [StdErr]),
+      oc_logger:warn("~p failed (~p) with: ~n", [Cmd, Code]),
+      oc_logger:warn("~s~n", [StdErr]),
       throw({error, ?CLONE_FAILURE})
   catch
     _:Err ->
-      io:format("~p failed (~p) with: ~n", [Cmd, Err]),
+      oc_logger:warn("~p failed (~p) with: ~n", [Cmd, Err]),
       throw({error, ?CLONE_FAILURE})
   end.
 
@@ -104,7 +104,7 @@ clone_package(Name, Url, Tag) ->
 -spec build_package(string()) -> string().
 build_package(Path) ->
   Cmd = lists:flatten(io_lib:format(?PACKAGE_CMD, [Path])),
-  io:format("run ~s~n", [Cmd]),
+  oc_logger:debug("run ~s~n", [Cmd]),
   try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
     {ok, Res} ->
       Stdout = proplists:get_value(stdout, Res), % TODO send to email, save attempt to db, send to http response
@@ -112,12 +112,12 @@ build_package(Path) ->
     {error, Err} ->
       Code = proplists:get_value(exit_status, Err),
       [StdErr] = proplists:get_value(stderr, Err, [undefined]),
-      io:format("~p failed (~p) with: ~n", [Cmd, Code]),
-      io:format("~s~n", [StdErr]),
+      oc_logger:warn("~p failed (~p) with: ~n", [Cmd, Code]),
+      oc_logger:warn("~s~n", [StdErr]),
       throw({error, ?BUILD_FAILURE})
   catch
     _:Err ->
-      io:format("~p failed (~p) with: ~n", [Cmd, Err]),
+      oc_logger:warn("~p failed (~p) with: ~n", [Cmd, Err]),
       throw({error, ?BUILD_FAILURE})
   end.
 
@@ -129,7 +129,7 @@ get_package_if_succeed(Output) ->
   Filtered = lists:dropwhile(fun(L) -> string:str(binary_to_list(L), "create package") == 0 end, Output),
   case Filtered of
     [] ->
-      io:format("~p~n", [Output]),
+      oc_logger:warn("~p~n", [Output]),
       throw({error, ?BUILD_FAILURE});
     [First | _] -> % normally it should be one
       PackPath = lists:last(string:tokens(binary_to_list(First), " ")),

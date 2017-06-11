@@ -10,7 +10,11 @@
 -author("tihon").
 
 %% API
--export([get_priv_dir/0, to_lower/1]).
+-export([
+  get_priv_dir/0,
+  to_lower/1,
+  now_to_timestamp/0,
+  ts_to_timestamp/1]).
 
 -spec get_priv_dir() -> string().
 get_priv_dir() ->
@@ -28,3 +32,10 @@ to_lower(Bin) when is_binary(Bin) ->
   list_to_binary(to_lower(binary_to_list(Bin)));
 to_lower(List) -> string:to_lower(List).
 
+-spec now_to_timestamp() -> integer().
+now_to_timestamp() ->
+  ts_to_timestamp(os:timestamp()).
+
+-spec ts_to_timestamp(erlang:timestamp()) -> integer().
+ts_to_timestamp({MegaSecs, Secs, MicroSecs}) ->
+  (MegaSecs * 1000000 + Secs) * 1000 + MicroSecs div 1000.

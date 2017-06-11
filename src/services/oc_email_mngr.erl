@@ -31,7 +31,7 @@ send_mail(To, Subject, Message) ->
   case is_binary(Res) of
     true -> true;
     false ->
-      io:format("Error sending email to ~p : ~p~n", [To, Res]),
+      oc_logger:warn("Error sending email to ~p : ~p~n", [To, Res]),
       false
   end.
 

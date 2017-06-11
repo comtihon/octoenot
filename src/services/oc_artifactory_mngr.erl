@@ -32,9 +32,8 @@ load_package(Name, Tag, Package) ->
   PackageName = get_package_name(Package),
   Path = get_package_url(Host, Repo, Name, Tag, PackageName),
   Cmd = lists:flatten(io_lib:format(?LOAD_CMD, [User, Pass, Path, Package])),
-  io:format("run ~p~n", [Cmd]),
-  A = os:cmd(Cmd), % TODO use erlang http client (or hackney lib)
-  io:format("~p~n", [A]),
+  oc_logger:debug("run ~p~n", [Cmd]), % TODO exec
+  os:cmd(Cmd), % TODO use erlang http client (or hackney lib)
   true.
 
 
@@ -44,7 +43,7 @@ is_artifactory_available(Host) ->
   case httpc:request(get, {Url, []}, [{timeout, ?CALL_TIMEOUT_MS}], []) of
     {ok, {{_, 200, _}, _, "OK"}} -> true;
     Err ->
-      io:format("Error accessing artifactory: ~p~n", [Err]),
+      oc_logger:err("Error accessing artifactory: ~p~n", [Err]),
       false
   end.
 
@@ -57,7 +56,7 @@ is_repo_available(Host, Repo) ->
       RepoBin = list_to_binary(Repo),
       true;
     Err ->
-      io:format("Error accessing artifactory's repo: ~p~n", [Err]),
+      oc_logger:err("Error accessing artifactory's repo: ~p~n", [Err]),
       false
   end.
 

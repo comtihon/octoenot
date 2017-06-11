@@ -28,6 +28,11 @@
       "name": "poolboy",
       "url": "https://github.com/devinus/poolboy.git",
       "tag": "1.5.1"
+    },
+    {
+      "name": "lager",
+      "url": "https://github.com/erlang-lager/lager.git",
+      "tag": "3.5.0"
     }
   ],
   "prebuild": [],

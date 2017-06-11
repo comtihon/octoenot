@@ -99,11 +99,11 @@ code_change(_OldVsn, State, _Extra) ->
 load_files() ->
   Path = oc_utils:get_priv_dir() ++ ?EMAIL_DIR,
   case file:list_dir(Path) of
-    {ok, []} -> io:format("No res files in path ~p", [Path]);
+    {ok, []} -> oc_logger:warn("No res files in path ~p", [Path]);
     {ok, Locales} ->
       load_locales(Path, Locales);
     Other ->
-      io:format("Can't find res files in path ~p : ~p", [Path, Other])
+      oc_logger:err("Can't find res files in path ~p : ~p", [Path, Other])
   end.
 
 %% @private

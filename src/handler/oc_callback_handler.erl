@@ -33,5 +33,5 @@ act_callback(#{<<"x-github-event">> := <<"create">>}, Body, Req0) ->
       cowboy_req:reply(500, #{<<"content-type">> => <<"text/plain">>}, Desc, Req0)
   end;
 act_callback(Headers, _Body, Req0) ->
-  io:format("Warning ~p~n", [Headers]),
+  oc_logger:warn("Unknown callback: ~p~n", [Headers]),
   cowboy_req:reply(400, #{<<"content-type">> => <<"text/plain">>}, ?UNSUPPORTED_TYPE, Req0).

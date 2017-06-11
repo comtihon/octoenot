@@ -29,8 +29,7 @@ add_package(#{?REF_NAME := Tag, ?REF_TYPE := <<"tag">>, ?REPO_INFO := Repo}) ->
         infinity),
       true;
     false ->
-      % TODO save to disc and proceed build later?
-      % TODO log this
+      oc_namespace_limiter:postpone_build(Name, Url, Tag),
       % TODO send build postponed email
       throw({error, ?REACH_NS_LIMIT})
   end;

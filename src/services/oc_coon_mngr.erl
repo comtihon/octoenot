@@ -20,10 +20,10 @@ init() ->
     {error, Err} ->
       Status = proplists:get_value(exit_status, Err),
       StdErr = proplists:get_value(stderr, Err),
-      io:format("Calling coon error(~p): ~p~n", [Status, StdErr]),
+      oc_logger:err("Calling coon error(~p): ~p~n", [Status, StdErr]),
       false;
     {ok, Reply} ->
       [Vsn] = proplists:get_value(stdout, Reply),
-      io:format("Coon vsn ~s~n", [Vsn]),
+      oc_logger:info("Coon vsn ~s~n", [Vsn]),
       ok
   end.
