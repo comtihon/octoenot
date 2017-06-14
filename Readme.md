@@ -1,5 +1,5 @@
 # Coon load server
-[![Build Status](https://travis-ci.org/comtihon/octocoon.svg?branch=master)](https://travis-ci.org/comtihon/octocoon)
+[![Build Status](https://travis-ci.org/comtihon/octocoon.svg?branch=master)](https://travis-ci.org/comtihon/octocoon)  
 Gets create tag callback from github, clones this repo, builds and loads to artifactory coon repo.
 
 Prototype.
