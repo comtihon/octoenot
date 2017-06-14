@@ -15,6 +15,8 @@
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
+-define(DB, filename:join([oc_utils:get_priv_dir(), atom_to_list(?EMBEDDED_STORAGE) ++ ".db"])).
+
 all() ->
   [
     test_restore_all_tasks
@@ -25,11 +27,12 @@ init_per_suite(Config) ->
   Config.
 
 init_per_testcase(_, Config) ->
+  ok = filelib:ensure_dir(oc_utils:get_priv_dir()),
   ok = oc_sqlite_mngr:init(),
   Config.
 
 end_per_testcase(_, Config) ->
-  ok = file:delete(atom_to_list(?EMBEDDED_STORAGE) ++ ".db"),
+  ok = file:delete(?DB),
   meck:unload(),
   Config.
 
@@ -44,18 +47,27 @@ test_restore_all_tasks(_) ->
   true = oc_sqlite_mngr:add_task(Db, <<"ns/proj1">>, <<"url1">>, <<"1.0.0">>),
   true = oc_sqlite_mngr:add_task(Db, <<"ns/proj2">>, <<"url2">>, <<"1.0.0">>),
   true = oc_sqlite_mngr:add_task(Db, <<"ns/proj3">>, <<"url3">>, <<"1.0.0">>),
+  sqlite3:close(Db),
 
   Self = self(),
   meck:new(oc_loader_mngr),
-  meck:expect(oc_loader_mngr, add_package, fun(Name, Url, Tag) -> Self ! {add, Name, Url, Tag} end),
+  meck:expect(oc_loader_mngr, add_package,
+    fun(Name, Url, Tag) ->
+      Self ! {add, Name, Url, Tag},
+      ok
+    end),
 
   {ok, Pid} = oc_namespace_limiter:start_link(),
   Pid ! check,
-
+  timer:sleep(1000),  % wait for all tasks to delete from db
   true = accert_added(<<"ns/proj1">>, <<"url1">>, <<"1.0.0">>),
   true = accert_added(<<"ns/proj2">>, <<"url2">>, <<"1.0.0">>),
   true = accert_added(<<"ns/proj3">>, <<"url3">>, <<"1.0.0">>),
 
+  {ok, Db1} = sqlite3:open(anonymous, [{file, ?DB}]),
+  All = oc_sqlite_mngr:get_all_tasks(Db1),
+  ?assertEqual([], proplists:get_value(rows, All, [])),
+  sqlite3:close(Db1),
   ok.
 
 
@@ -64,5 +76,5 @@ accert_added(Name, Url, Tag) ->
   receive
     {add, Name, Url, Tag} -> true
   after
-    100 -> false
+    200 -> false
   end.

@@ -12,7 +12,7 @@
 -define(TASKS_TABLE, tasks).
 
 -define(NAME_FIELD, name).
--define(URL_FIELD, name).
--define(TAG_FIELD, name).
+-define(URL_FIELD, url).
+-define(TAG_FIELD, tag).
 
 -define(TASKS_TABLE_SCHEMA, [{?NAME_FIELD, text}, {?URL_FIELD, text}, {?TAG_FIELD, text}]).

@@ -38,7 +38,9 @@
       "name": "sqlite3",
       "url": "https://github.com/alexeyr/erlang-sqlite3.git",
       "tag": "v1.1.4"
-    },
+    }
+  ],
+  "test_deps": [
     {
       "name": "meck",
       "url": "https://github.com/eproxus/meck.git",

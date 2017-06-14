@@ -92,7 +92,7 @@ handle_cast(_Request, State) ->
 
 handle_info(check, State = #state{sqlite_db = Db}) ->
   All = oc_sqlite_mngr:get_all_tasks(Db),
-  lists:foreach(fun(Task) -> restart_task(Task, Db) end, All),
+  lists:foreach(fun(Task) -> restart_task(Db, Task) end, proplists:get_value(rows, All, [])),
   erlang:send_after(?TASK_CHECK_INTERVAL, self(), check),
   {noreply, State};
 handle_info(clean, State) ->
@@ -112,11 +112,8 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 %% @private
-restart_task(Db, Task) ->
-  Name = proplists:get_value(?NAME_FIELD, Task),
-  Url = proplists:get_value(?URL_FIELD, Task),
-  Tag = proplists:get_value(?TAG_FIELD, Task),
+restart_task(Db, {Name, Url, Tag}) ->
   Now = oc_utils:now_to_timestamp(),
   ets:insert(?ETS, {Name, Now}),
   ok = oc_loader_mngr:add_package(Name, Url, Tag),
-  oc_sqlite_mngr:del_task(Db, Name).
+  true = oc_sqlite_mngr:del_task(Db, Name).

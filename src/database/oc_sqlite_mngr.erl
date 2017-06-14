@@ -29,19 +29,17 @@ init() ->
 
 -spec connect() -> {ok, pid()} | {error, any()}.
 connect() ->
-  sqlite3:open(?EMBEDDED_STORAGE).
+  DbFile = filename:join([oc_utils:get_priv_dir(), atom_to_list(?EMBEDDED_STORAGE) ++ ".db"]),
+  sqlite3:open(?EMBEDDED_STORAGE, [{file, DbFile}]).
 
 -spec add_task(pid() | atom(), binary(), binary(), binary()) -> boolean().
 add_task(Db, Name, Url, Tag) ->
-  Res = sqlite3:write(Db, ?TASKS_TABLE, [{?NAME_FIELD, Name}, {?URL_FIELD, Url}, {?TAG_FIELD, Tag}]),
-  io:format("~p~n", [Res]),
+  {rowid, _} = sqlite3:write(Db, ?TASKS_TABLE, [{?NAME_FIELD, Name}, {?URL_FIELD, Url}, {?TAG_FIELD, Tag}]),
   true.
 
 -spec del_task(pid() | atom(), binary()) -> boolean().
 del_task(Db, Name) ->  % TODO tag
-  Res = sqlite3:delete(Db, ?TASKS_TABLE, {?NAME_FIELD, Name}),
-  io:format("~p~n", [Res]),
-  true.
+  ok == sqlite3:delete(Db, ?TASKS_TABLE, {?NAME_FIELD, Name}).
 
 -spec get_all_tasks(pid() | atom()) -> list().
 get_all_tasks(Db) ->
@@ -66,10 +64,9 @@ check_installed() ->
 
 %% @private
 populate_if_needed(Db) ->
-  case sqlite3:create_table(Db, ?TASKS_TABLE, ?TASKS_TABLE_SCHEMA) of
-    ok -> ok;
-    {error, _, "table tasks already exists"} -> ok;
-    Other ->
-      oc_logger:err("Can't populate table ~p with ~p", [?TASKS_TABLE, Other]),
-      error
+  case sqlite3:table_info(Db, ?TASKS_TABLE) of
+    table_does_not_exist ->
+      sqlite3:create_table(Db, ?TASKS_TABLE, ?TASKS_TABLE_SCHEMA);
+    _ ->
+      ok
   end.
