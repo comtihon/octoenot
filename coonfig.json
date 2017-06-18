@@ -1,7 +1,6 @@
 {
   "name": "octocoon",
   "app_vsn": "1.0.0",
-  "drop_unknown_deps": true,
   "with_source": true,
   "deps": [
     {

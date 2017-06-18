@@ -59,7 +59,8 @@ start_link() ->
 init([]) ->
   NSLimiter = ?CHILD(oc_namespace_limiter, worker),
   ResourceHolder = ?CHILD(oc_resource_holder, worker),
-  {ok, {{one_for_one, 1000, 3600}, [NSLimiter, ResourceHolder]}}.
+  ConfHolder = ?CHILD(oc_conf_holder, worker),
+  {ok, {{one_for_one, 1000, 3600}, [NSLimiter, ResourceHolder, ConfHolder]}}.
 
 %%%===================================================================
 %%% Internal functions
