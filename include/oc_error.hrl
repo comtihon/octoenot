@@ -13,3 +13,4 @@
 -define(REACH_NS_LIMIT, <<"Reached build limit for this repo">>).
 -define(CLONE_FAILURE, <<"Failed to clone repo">>).
 -define(BUILD_FAILURE, <<"Failed to build package">>).
+-define(NOT_A_COON, <<"Coonfig.json not found">>).

@@ -23,7 +23,7 @@
 -spec init() -> {ok, string()} | error.
 init() ->
   Vsn = erlang_version(),
-  oc_logger:info("Default Erlang vsn ~s", [Vsn]),
+  oc_logger:info("System Erlang vsn ~s", [Vsn]),
   {ok, Executable} = ensure_kerl("kerl"),
   {ok, Installations} = kerl_installations(Executable),
   ok = check_default_erlang(Vsn, Installations),
@@ -38,7 +38,7 @@ erlang_version() ->
 ensure_kerl() ->
   ensure_kerl("kerl").
 
--spec kerl_installations(string()) -> list({binary(), binary()}).
+-spec kerl_installations(string()) -> {ok, list({string(), string()})} | error.
 kerl_installations(Executable) ->
   Res = exec:run(Executable ++ " list installations", [sync, stdout, stderr]),
   case Res of
@@ -57,10 +57,8 @@ kerl_installations(Executable) ->
 %% @private
 check_default_erlang(System, Installations) ->
   {ok, Erl} = application:get_env(octocoon, default_erlang),
-  ErlBin = atom_to_binary(Erl, utf8),
-  SystemBin = list_to_binary(System),
-  case proplists:get_value(ErlBin, Installations) of
-    undefined when SystemBin /= ErlBin -> % no default erlang in kerl installation and in system
+  case proplists:get_value(Erl, Installations) of
+    undefined when System /= Erl -> % no default erlang in kerl installation and in system
       error; % TODO should install it via kerl
     _ -> ok
   end.
@@ -123,4 +121,4 @@ parse_installations(Installations) ->
 split_installation(Installation) ->
   [Vsn, Path] = binary:split(Installation, <<" ">>),
   [AbsVsn, _] = binary:split(Vsn, <<".">>),
-  {AbsVsn, Path}.
+  {binary_to_list(AbsVsn), binary_to_list(Path)}.

@@ -30,7 +30,7 @@
 %%%===================================================================
 %%% API
 %%%===================================================================
--spec get_kerl_installation(binary()) -> {ok, string()} | undefined .
+-spec get_kerl_installation(string()) -> {ok, string()} | undefined .
 get_kerl_installation(Erl) ->
   case ets:lookup(?CONF_ETS, Erl) of
     [] -> undefined;
@@ -62,10 +62,10 @@ start_link() ->
 
 init([]) ->
   ets:new(?CONF_ETS, [named_table, protected, {read_concurrency, true}]),
-  DefaultErl = oc_erlang_mngr:erlang_version(),
+  SystemErl = oc_erlang_mngr:erlang_version(),
   {ok, KerlPath} = oc_erlang_mngr:ensure_kerl(),
   {ok, KerlInstallations} = oc_erlang_mngr:kerl_installations(KerlPath),
-  save_erl(DefaultErl, KerlPath, KerlInstallations),
+  save_erl(SystemErl, KerlPath, KerlInstallations),
   {ok, #state{}}.
 
 handle_call(_Request, _From, State) ->

@@ -24,7 +24,7 @@ add_package(#{?REF_NAME := Tag, ?REF_TYPE := <<"tag">>, ?REPO_INFO := Repo}) ->
   % TODO get user email
   case oc_namespace_limiter:check_package(Name) of
     true ->
-      add_package(Name, Url, Tag),
+      spawn(fun() -> add_package(Name, Url, Tag) end), % wait for compilation async, to release hook
       true;
     false ->
       oc_namespace_limiter:postpone_build(Name, Url, Tag),
@@ -37,6 +37,6 @@ add_package(_) ->  % make only tag support configurable?
 -spec add_package(binary(), binary(), binary()) -> ok.
 add_package(Name, Url, Tag) ->
   poolboy:transaction(?BUILDER_POOL,
-    fun(Worker) -> oc_loader:load_package_async(Worker, Name, Url, Tag) end,
+    fun(Worker) -> oc_loader:load_package(Worker, Name, Url, Tag) end,
     infinity),
   ok.

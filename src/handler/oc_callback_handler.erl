@@ -22,7 +22,8 @@ init(Req0, State) ->
 
 
 %% @private
-act_callback(#{<<"x-github-event">> := <<"create">>}, Body, Req0) ->
+act_callback(Headers = #{<<"x-github-event">> := <<"create">>}, Body, Req0) ->
+  oc_logger:info("Headers ~p", [Headers]),
   Payload = proplists:get_value(<<"payload">>, Body),
   Decoded = jsone:decode(Payload, [{object_format, map}]),
   try oc_loader_mngr:add_package(Decoded) of

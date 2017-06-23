@@ -9,12 +9,13 @@
 -module(oc_loader).
 -author("tihon").
 
+-include("oc_coonfig.hrl").
 -include("oc_error.hrl").
 
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, load_package_async/4]).
+-export([start_link/1, load_package/4]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -24,18 +25,16 @@
   terminate/2,
   code_change/3]).
 
--define(CLONE_CMD, "git clone -b ~s ~s ~s").
--define(PACKAGE_CMD, "cd ~s; coon package").
 -define(SERVER, ?MODULE).
 
--record(state, {}).
+-record(state, {disable_prebuild :: boolean(), default_erl :: string()}).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
--spec load_package_async(pid(), binary(), binary(), binary()) -> ok.
-load_package_async(Worker, Name, Url, Tag) ->
-  gen_server:cast(Worker, {load, Name, Url, Tag}).
+-spec load_package(pid(), binary(), binary(), binary()) -> ok.
+load_package(Worker, Name, Url, Tag) ->
+  gen_server:call(Worker, {load, Name, Url, Tag}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -53,16 +52,16 @@ start_link(Options) ->
 %%%===================================================================
 
 init([]) ->
-  {ok, #state{}}.
+  {ok, Disable} = application:get_env(octocoon, disable_prebuild),
+  {ok, DefaultErl} = application:get_env(octocoon, default_erlang),
+  {ok, #state{disable_prebuild = Disable, default_erl = DefaultErl}}.
 
-handle_call(_Request, _From, State) ->
+handle_call({load, Name, Url, Tag}, _From, State = #state{disable_prebuild = Disable, default_erl = Default}) ->
+  Path = oc_loader_logic:clone_repo(binary_to_list(Name), Url, Tag),
+  Erls = oc_loader_logic:check_config(Path, Disable, Default),
+  build_with_all_erl(Name, Tag, Path, Erls),
   {reply, ok, State}.
 
-handle_cast({load, Name, Url, Tag}, State) ->
-  Path = clone_package(binary_to_list(Name), Url, Tag),
-  Package = build_package(Path),
-  oc_artifactory_mngr:load_package(Name, Tag, Package),
-  {noreply, State};
 handle_cast(_Request, State) ->
   {noreply, State}.
 
@@ -79,57 +78,24 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 %% @private
--spec clone_package(string(), binary(), binary()) -> string().
-clone_package(Name, Url, Tag) ->
-  {ok, Dir} = application:get_env(octocoon, build_dir),
-  Path = filename:join([Dir, Name]),
-  Cmd = lists:flatten(io_lib:format(?CLONE_CMD, [Tag, Url, Path])),
-  os:cmd("rm -Rf " ++ Path),
-  oc_logger:debug("run ~p", [Cmd]),
-  try exec:run(Cmd, [sync, stderr]) of
-    {ok, _} -> Path;
-    {error, Err} ->
-      Code = proplists:get_value(exit_status, Err),
-      [StdErr] = proplists:get_value(stderr, Err, [undefined]),
-      oc_logger:warn("~p failed (~p): ~s", [Cmd, Code, StdErr]),
-      throw({error, ?CLONE_FAILURE})
-  catch
-    _:Err ->
-      oc_logger:warn("~p failed (~p)", [Cmd, Err]),
-      throw({error, ?CLONE_FAILURE})
-  end.
+%% Build package with all erlang versions and load to remote repo
+build_with_all_erl(Name, Tag, Path, Erls) ->
+  lists:foreach(
+    fun(Erl) ->
+      VersionedPath = ensure_path(Path, Erl),
+      PackagePath = oc_loader_logic:build_package(Erl, VersionedPath),
+      oc_artifactory_mngr:load_package(Name, Tag, Erl, PackagePath),
+      os:cmd("rm -Rf " ++ VersionedPath)   % remove tmp vsn dir
+    end, Erls),
+  os:cmd("rm -Rf " ++ Path).  % remove project dir
 
 %% @private
--spec build_package(string()) -> string().
-build_package(Path) ->
-  Cmd = lists:flatten(io_lib:format(?PACKAGE_CMD, [Path])),
-  oc_logger:debug("run ~s", [Cmd]),
-  try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
-    {ok, Res} ->
-      Stdout = proplists:get_value(stdout, Res), % TODO send to email, save attempt to db, send to http response
-      get_package_if_succeed(Stdout);
-    {error, Err} ->
-      Code = proplists:get_value(exit_status, Err),
-      [StdErr] = proplists:get_value(stderr, Err, [undefined]),
-      oc_logger:warn("~p failed (~p) ~p", [Cmd, Code, StdErr]),
-      throw({error, ?BUILD_FAILURE})
-  catch
-    _:Err ->
-      oc_logger:warn("~p failed (~p)", [Cmd, Err]),
-      throw({error, ?BUILD_FAILURE})
-  end.
-
-%% @private
--spec get_package_if_succeed(list(binary())) -> string().
-get_package_if_succeed(undefined) ->
-  throw({error, ?BUILD_FAILURE});
-get_package_if_succeed(Output) ->
-  Filtered = lists:dropwhile(fun(L) -> string:str(binary_to_list(L), "create package") == 0 end, Output),
-  case Filtered of
-    [] ->
-      oc_logger:warn("~p", [Output]),
-      throw({error, ?BUILD_FAILURE});
-    [First | _] -> % normally it should be one
-      PackPath = lists:last(string:tokens(binary_to_list(First), " ")),
-      string:strip(PackPath, right, $\n)
-  end.
+%% Copy cloned repo to repoErlVsn dir.
+%% This should be done in order to force clean compilation for
+%% multiple erlang vsns
+ensure_path(Path, Erl) ->
+  VersionedDir = Path ++ "_" ++ Erl,
+  os:cmd("rm -Rf " ++ VersionedDir),
+  ok = filelib:ensure_dir(VersionedDir),
+  os:cmd("cp -r " ++ Path ++ " " ++ VersionedDir),
+  VersionedDir.

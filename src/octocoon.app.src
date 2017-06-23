@@ -8,7 +8,8 @@
   {env,
     [
       {http_port, 4567},
-      {default_erlang, '19'},  % Use this erlang as default. It should be installed in kerl.
+      {default_erlang, "19"},  % Use this erlang as default. It should be installed in kerl.
+      {disable_prebuild, true},  % Disable prebuild steps for security reasons
       {artifactory,
           #{
               host => "http://localhost:8081/artifactory",
