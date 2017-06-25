@@ -88,7 +88,7 @@ get_erl(_, Default) ->
 
 %% @private
 activate_erl_cmd(SystemErl, SystemErl) -> "";
-activate_erl_cmd(Erl, _) ->
+activate_erl_cmd(Erl, _) ->  % TODO handle undefined erl. Should make kerl download and install erl, then rerun this task
   {ok, Path} = oc_conf_holder:get_kerl_installation(Erl),
   ". " ++ Path ++ "/activate && ".
 
