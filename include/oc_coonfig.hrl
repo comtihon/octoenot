@@ -9,7 +9,7 @@
 -author("tihon").
 
 %% Keys
--define(ERL_RELEASES, <<"">>).
+-define(ERL_RELEASES, <<"erlang">>).
 -define(PREBUILD, <<"prebuild">>).
 -define(DISABLE_PREBUILD, <<"disable_prebuild">>).
 -define(OVERRIDE_CONF, <<"override">>).

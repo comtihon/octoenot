@@ -13,23 +13,24 @@
 -include("oc_error.hrl").
 
 -define(CLONE_CMD, "git clone -b ~s ~s ~s").
--define(PACKAGE_CMD, "cd ~s; coon package").
+-define(PACKAGE_CMD, "cd ~s && coon package").
 
 %% API
 -export([clone_repo/3, check_config/3, build_package/2]).
 
 -spec clone_repo(string(), binary(), binary()) -> string().
 clone_repo(Name, Url, Tag) ->
+  oc_logger:info("clone repo ~p ~p ~p", [Name, Url, Tag]),
   {ok, Dir} = application:get_env(octocoon, build_dir),
   Path = filename:join([Dir, Name]),
   Cmd = lists:flatten(io_lib:format(?CLONE_CMD, [Tag, Url, Path])),
   os:cmd("rm -Rf " ++ Path),
   oc_logger:debug("run ~p", [Cmd]),
-  try exec:run(Cmd, [sync, stderr]) of
+  try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
     {ok, _} -> Path;
     {error, Err} ->
       Code = proplists:get_value(exit_status, Err),
-      [StdErr] = proplists:get_value(stderr, Err, [undefined]),
+      StdErr = proplists:get_value(stdout, Err, [undefined]),
       oc_logger:warn("~p failed (~p): ~s", [Cmd, Code, StdErr]),
       throw({error, ?CLONE_FAILURE})
   catch
@@ -51,17 +52,18 @@ check_config(Path, DisablePrebuild, DefaultErl) ->
 %% Build repo and generate package. Return path to the package
 -spec build_package(string(), string()) -> string().
 build_package(Erl, Path) ->
+  oc_logger:info("build package ~p ~p", [Erl, Path]),
   SystemErl = oc_conf_holder:get_system_erl(),
   Prefix = activate_erl_cmd(Erl, SystemErl),
   Cmd = lists:flatten(io_lib:format(?PACKAGE_CMD, [Path])),
   oc_logger:debug("run ~s", [Prefix ++ Cmd]),
   try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
     {ok, Res} ->
-      Stdout = proplists:get_value(stdout, Res), % TODO send to email, save attempt to db, send to http response
+      Stdout = proplists:get_value(stdout, Res),
       get_package_if_succeed(Stdout);
     {error, Err} ->
       Code = proplists:get_value(exit_status, Err),
-      [StdErr] = proplists:get_value(stderr, Err, [undefined]),
+      StdErr = proplists:get_value(stdout, Err, [undefined]),
       oc_logger:warn("~p failed (~p) ~p", [Cmd, Code, StdErr]),
       throw({error, ?BUILD_FAILURE})
   catch
@@ -88,7 +90,7 @@ get_erl(_, Default) ->
 activate_erl_cmd(SystemErl, SystemErl) -> "";
 activate_erl_cmd(Erl, _) ->
   {ok, Path} = oc_conf_holder:get_kerl_installation(Erl),
-  "./" ++ Path ++ " activate;".
+  ". " ++ Path ++ "/activate && ".
 
 %% @private
 -spec get_package_if_succeed(list(binary())) -> string().

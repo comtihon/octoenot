@@ -34,7 +34,8 @@
 %%%===================================================================
 -spec load_package(pid(), binary(), binary(), binary()) -> ok.
 load_package(Worker, Name, Url, Tag) ->
-  gen_server:call(Worker, {load, Name, Url, Tag}).
+  oc_logger:info("load package ~p ~p ~p", [Name, Url, Tag]),
+  gen_server:call(Worker, {load, Name, Url, Tag}, infinity).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -80,14 +81,23 @@ code_change(_OldVsn, State, _Extra) ->
 %% @private
 %% Build package with all erlang versions and load to remote repo
 build_with_all_erl(Name, Tag, Path, Erls) ->
-  lists:foreach(
-    fun(Erl) ->
-      VersionedPath = ensure_path(Path, Erl),
-      PackagePath = oc_loader_logic:build_package(Erl, VersionedPath),
-      oc_artifactory_mngr:load_package(Name, Tag, Erl, PackagePath),
-      os:cmd("rm -Rf " ++ VersionedPath)   % remove tmp vsn dir
-    end, Erls),
+  oc_logger:info("erls ~p", [Erls]),
+  lists:foreach(fun(Erl) -> build_with_erl(Erl, Path, Name, Tag) end, Erls),
   os:cmd("rm -Rf " ++ Path).  % remove project dir
+
+%% @private
+build_with_erl(Erl, Path, Name, Tag) ->
+  VersionedPath = ensure_path(Path, Erl),
+  try
+    PackagePath = oc_loader_logic:build_package(Erl, VersionedPath),
+    oc_artifactory_mngr:load_package(Name, Tag, PackagePath, Erl)
+  catch
+    throw:{error, ?BUILD_FAILURE} -> ok;  % TODO notify user
+    throw:{error, ?LOAD_FAILURE} -> ok  % TODO notify user
+  after
+    os:cmd("rm -Rf " ++ VersionedPath)  % remove tmp vsn dir
+  end.
+
 
 %% @private
 %% Copy cloned repo to repoErlVsn dir.

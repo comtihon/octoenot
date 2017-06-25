@@ -9,6 +9,8 @@
 -module(oc_artifactory_mngr).
 -author("tihon").
 
+-include("oc_error.hrl").
+
 %% API
 -export([load_package/4, init/0]).
 
@@ -26,16 +28,26 @@ init() ->
   true = is_repo_available(Host, Repo),
   ok.
 
--spec load_package(binary(), binary(), string(), string()) -> boolean().
+-spec load_package(binary(), binary(), string(), string()) -> true.
 load_package(Name, Tag, PackagePath, Erl) ->
   {ok, Conf} = application:get_env(octocoon, artifactory),
   #{user := User, password := Pass, repo := Repo, host := Host} = Conf,
   PackageName = get_package_name(PackagePath),
   Path = get_package_url(Host, Repo, Name, Tag, Erl, PackageName),
   Cmd = lists:flatten(io_lib:format(?LOAD_CMD, [User, Pass, Path, PackagePath])),
-  oc_logger:debug("run ~p", [Cmd]), % TODO exec
-  os:cmd(Cmd), % TODO use erlang http client (or hackney lib)
-  true.
+  oc_logger:debug("run ~p", [Cmd]),  % TODO use erlang http client (or hackney lib)
+  try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
+    {ok, _Res} -> true;
+    {error, Err} ->
+      Code = proplists:get_value(exit_status, Err),
+      StdErr = proplists:get_value(stdout, Err, [undefined]),
+      oc_logger:warn("~p failed (~p) ~p", [Cmd, Code, StdErr]),
+      throw({error, ?LOAD_FAILURE})
+  catch
+    _:Err ->
+      oc_logger:warn("~p failed (~p)", [Cmd, Err]),
+      throw({error, ?LOAD_FAILURE})
+  end.
 
 
 %% @private
