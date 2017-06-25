@@ -21,6 +21,7 @@
 -spec clone_repo(string(), binary(), binary()) -> string().
 clone_repo(Name, Url, Tag) ->
   oc_logger:info("clone repo ~p ~p ~p", [Name, Url, Tag]),
+  oc_metrics_mngr:clone_request(),
   {ok, Dir} = application:get_env(octocoon, build_dir),
   Path = filename:join([Dir, Name]),
   Cmd = lists:flatten(io_lib:format(?CLONE_CMD, [Tag, Url, Path])),
@@ -32,10 +33,12 @@ clone_repo(Name, Url, Tag) ->
       Code = proplists:get_value(exit_status, Err),
       StdErr = proplists:get_value(stdout, Err, [undefined]),
       oc_logger:warn("~p failed (~p): ~s", [Cmd, Code, StdErr]),
+      oc_metrics_mngr:clone_error(),
       throw({error, ?CLONE_FAILURE})
   catch
     _:Err ->
       oc_logger:warn("~p failed (~p)", [Cmd, Err]),
+      oc_metrics_mngr:clone_error(),
       throw({error, ?CLONE_FAILURE})
   end.
 
@@ -53,6 +56,7 @@ check_config(Path, DisablePrebuild, DefaultErl) ->
 -spec build_package(string(), string()) -> string().
 build_package(Erl, Path) ->
   oc_logger:info("build package ~p ~p", [Erl, Path]),
+  oc_metrics_mngr:build_request(),
   SystemErl = oc_conf_holder:get_system_erl(),
   Prefix = activate_erl_cmd(Erl, SystemErl),
   Cmd = lists:flatten(io_lib:format(?PACKAGE_CMD, [Path])),
@@ -60,15 +64,18 @@ build_package(Erl, Path) ->
   try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
     {ok, Res} ->
       Stdout = proplists:get_value(stdout, Res),
+      oc_metrics_mngr:build_success(),
       get_package_if_succeed(Stdout);
     {error, Err} ->
       Code = proplists:get_value(exit_status, Err),
       StdErr = proplists:get_value(stdout, Err, [undefined]),
       oc_logger:warn("~p failed (~p) ~p", [Cmd, Code, StdErr]),
+      oc_metrics_mngr:build_error(),
       throw({error, ?BUILD_FAILURE})
   catch
     _:Err ->
       oc_logger:warn("~p failed (~p)", [Cmd, Err]),
+      oc_metrics_mngr:build_error(),
       throw({error, ?BUILD_FAILURE})
   end.
 

@@ -37,15 +37,19 @@ load_package(Name, Tag, PackagePath, Erl) ->
   Cmd = lists:flatten(io_lib:format(?LOAD_CMD, [User, Pass, Path, PackagePath])),
   oc_logger:debug("run ~p", [Cmd]),  % TODO use erlang http client (or hackney lib)
   try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
-    {ok, _Res} -> true;
+    {ok, _Res} ->
+      oc_metrics_mngr:load_success(),
+      true;
     {error, Err} ->
       Code = proplists:get_value(exit_status, Err),
       StdErr = proplists:get_value(stdout, Err, [undefined]),
       oc_logger:warn("~p failed (~p) ~p", [Cmd, Code, StdErr]),
+      oc_metrics_mngr:load_error(),
       throw({error, ?LOAD_FAILURE})
   catch
     _:Err ->
       oc_logger:warn("~p failed (~p)", [Cmd, Err]),
+      oc_metrics_mngr:load_error(),
       throw({error, ?LOAD_FAILURE})
   end.
 

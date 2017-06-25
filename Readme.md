@@ -13,3 +13,7 @@ Prototype.
 * [coon](https://github.com/comtihon/coon) (should be installed locally)
 * [artifactory](https://www.jfrog.com/artifactory/) (url is set in app.src)
 * [sqlite3](https://www.sqlite.org/) (should be installed locally)
+
+# Security
+* disable executing prebuild commands with `{disable_prebuild, true}`
+* disable http access to `/statistics` for everyone except Collectd

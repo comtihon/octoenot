@@ -37,6 +37,11 @@
       "name": "sqlite3",
       "url": "https://github.com/alexeyr/erlang-sqlite3.git",
       "tag": "v1.1.4"
+    },
+    {
+      "name": "folsom",
+      "url": "https://github.com/comtihon/folsom.git",
+      "tag": "0.8.6"
     }
   ],
   "test_deps": [
@@ -45,8 +50,5 @@
       "url": "https://github.com/eproxus/meck.git",
       "tag": "0.8.4"
     }
-  ],
-  "prebuild": [],
-  "build_vars": [],
-  "c_build_vars": []
+  ]
 }

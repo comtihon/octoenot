@@ -1,4 +1,5 @@
 {
+    "davisp/jiffy": "0.13.3-137d3d94b6ee10001d761d412cbbe7f665680c98",
     "ninenines/cowlib": "master-21bb4295eb380fd38123a1983559fe6c7d59fa27",
     "ninenines/ranch": "1.3.0-40809cd2b257a8a53bcb5588ecaa88cc5381ff5c"
 }

@@ -19,6 +19,7 @@ init() ->
   Dispatch = cowboy_router:compile([
     {'_',
       [
+        {"/statistics", oc_statistics_handler, #{}},
         {"/callback", oc_callback_handler, #{}},  % TODO badge handler?
         {'_', oc_notfound_handler, #{}}
       ]
