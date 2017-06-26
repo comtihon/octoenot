@@ -10,6 +10,9 @@
       {http_port, 4567},
       {default_erlang, "19"},  % Use this erlang as default. It should be installed in kerl.
       {disable_prebuild, true},  % Disable prebuild steps for security reasons
+      {mertics,
+          #{port => 4232}  % CollectD (or others) will go there for statistics
+      },
       {artifactory,
           #{
               host => "http://localhost:8081/artifactory",

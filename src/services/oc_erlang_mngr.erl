@@ -34,6 +34,7 @@ init() ->
 erlang_version() ->
   erlang:system_info(otp_release).
 
+%% Search kerl installed in system. If not - download it to priv.
 -spec ensure_kerl() -> {ok, string()} | error.
 ensure_kerl() ->
   ensure_kerl("kerl").
@@ -66,7 +67,7 @@ check_default_erlang(System, Installations) ->
 %% @private
 %% Check kerl installed in system. If not - check in priv dir. If not - download there.
 -spec ensure_kerl(string()) -> {ok, string()} | error.
-ensure_kerl(Kerl) when is_list(Kerl) ->
+ensure_kerl(Kerl) when is_list(Kerl) ->  % check kerl clause
   case kerl_version(Kerl) of
     ok -> {ok, Kerl};
     error when Kerl == "kerl" ->  % kerl checking. Call to check priv.
@@ -74,7 +75,7 @@ ensure_kerl(Kerl) when is_list(Kerl) ->
     error ->  % priv check - no more guessess, return error
       error
   end;
-ensure_kerl(undefined) ->
+ensure_kerl(undefined) ->  % install kerl clause
   Pwd = oc_utils:get_priv_dir(),
   KerlPwd = filename:join([Pwd, "kerl"]),
   case ensure_kerl(KerlPwd) of

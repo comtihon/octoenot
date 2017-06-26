@@ -104,7 +104,7 @@ test_build_several(_) ->
 check_over_erl(Erl) ->
   ct:pal("check ~p", [Erl]),
   {build, {Erl, "ClonedRepoPath_" ++ Erl}} = get_step(build),
-  {load, {<<"ns/name">>, <<"1.0.0">>, Erl, "PackagePath"}} = get_step(load).
+  {load, {<<"ns/name">>, <<"1.0.0">>, "PackagePath", Erl}} = get_step(load).
 
 %% @private
 get_step(Type) ->

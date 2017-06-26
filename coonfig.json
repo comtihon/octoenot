@@ -2,6 +2,10 @@
   "name": "octocoon",
   "app_vsn": "1.0.0",
   "with_source": true,
+  "erlang": [
+    "19",
+    "20"
+  ],
   "deps": [
     {
       "name": "cowboy",
