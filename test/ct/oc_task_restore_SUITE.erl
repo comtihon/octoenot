@@ -12,10 +12,12 @@
 -compile(export_all).
 
 -include("oc_tasks.hrl").
+-include("oc_database.hrl").
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
--define(DB, filename:join([oc_utils:get_priv_dir(), atom_to_list(?EMBEDDED_STORAGE) ++ ".db"])).
+-define(PACKAGE_DB, filename:join([oc_utils:get_priv_dir(), atom_to_list(?PACKAGES_STORAGE) ++ ".db"])).
+-define(TASKS_DB, filename:join([oc_utils:get_priv_dir(), atom_to_list(?TASKS_STORAGE) ++ ".db"])).
 
 all() ->
   [
@@ -32,7 +34,8 @@ init_per_testcase(_, Config) ->
   Config.
 
 end_per_testcase(_, Config) ->
-  ok = file:delete(?DB),
+  ok = file:delete(?PACKAGE_DB),
+  ok = file:delete(?TASKS_DB),
   meck:unload(),
   Config.
 
@@ -43,7 +46,7 @@ end_per_suite(Config) ->
 test_restore_all_tasks(_) ->
   ct:pal("------------------~p------------------~n", [test_restore_all_tasks]),
 
-  {ok, Db} = oc_sqlite_mngr:connect(),
+  {ok, Db} = oc_sqlite_mngr:connect(?TASKS_STORAGE),
   true = oc_sqlite_mngr:add_task(Db, <<"ns/proj1">>, <<"url1">>, <<"1.0.0">>),
   true = oc_sqlite_mngr:add_task(Db, <<"ns/proj2">>, <<"url2">>, <<"1.0.0">>),
   true = oc_sqlite_mngr:add_task(Db, <<"ns/proj3">>, <<"url3">>, <<"1.0.0">>),
@@ -64,7 +67,7 @@ test_restore_all_tasks(_) ->
   true = accert_added(<<"ns/proj2">>, <<"url2">>, <<"1.0.0">>),
   true = accert_added(<<"ns/proj3">>, <<"url3">>, <<"1.0.0">>),
 
-  {ok, Db1} = sqlite3:open(anonymous, [{file, ?DB}]),
+  {ok, Db1} = sqlite3:open(anonymous, [{file, ?TASKS_DB}]),
   All = oc_sqlite_mngr:get_all_tasks(Db1),
   ?assertEqual([], proplists:get_value(rows, All, [])),
   sqlite3:close(Db1),

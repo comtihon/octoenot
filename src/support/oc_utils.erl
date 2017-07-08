@@ -14,7 +14,8 @@
   get_priv_dir/0,
   to_lower/1,
   now_to_timestamp/0,
-  ts_to_timestamp/1]).
+  ts_to_timestamp/1,
+  exec/2]).
 
 -spec get_priv_dir() -> string().
 get_priv_dir() ->
@@ -39,3 +40,9 @@ now_to_timestamp() ->
 -spec ts_to_timestamp(erlang:timestamp()) -> integer().
 ts_to_timestamp({MegaSecs, Secs, MicroSecs}) ->
   (MegaSecs * 1000000 + Secs) * 1000 + MicroSecs div 1000.
+
+%% none, compile, {crash,lint_module... while mocking exec
+-spec exec(string(), list()) ->
+  {ok, pid(), pid()} | {ok, [{stdout | stderr, [binary()]}]} | {error, any()}.
+exec(Cmd, Args) ->
+  exec:run(Cmd, Args).

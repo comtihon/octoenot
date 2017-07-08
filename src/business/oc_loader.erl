@@ -90,7 +90,8 @@ build_with_erl(Erl, Path, Name, Tag) ->
   VersionedPath = ensure_path(Path, Erl),
   try
     PackagePath = oc_loader_logic:build_package(Erl, VersionedPath),
-    oc_artifactory_mngr:load_package(Name, Tag, PackagePath, Erl)
+    oc_artifactory_mngr:load_package(Name, Tag, PackagePath, Erl),
+    oc_database_holder:add_package(Name, Tag, Erl)
   catch
     throw:{error, ?BUILD_FAILURE} -> ok;  % TODO notify user
     throw:{error, ?LOAD_FAILURE} -> ok  % TODO notify user

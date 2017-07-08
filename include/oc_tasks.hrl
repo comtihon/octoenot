@@ -8,7 +8,7 @@
 %%%-------------------------------------------------------------------
 -author("tihon").
 
--define(EMBEDDED_STORAGE, coon_db).
+-define(TASKS_STORAGE, coon_tasks_db).
 -define(TASKS_TABLE, tasks).
 
 -define(NAME_FIELD, name).

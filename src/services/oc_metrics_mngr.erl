@@ -20,7 +20,8 @@
   build_error/0,
   build_success/0,
   load_success/0,
-  load_error/0]).
+  load_error/0,
+  badge_request/0]).
 
 init() ->
   ok = folsom_metrics:new_counter(?CLONE),
@@ -30,6 +31,7 @@ init() ->
   ok = folsom_metrics:new_counter(?BUILD_SUCCESS),
   ok = folsom_metrics:new_counter(?LOAD),
   ok = folsom_metrics:new_counter(?LOAD_ERROR),
+  ok = folsom_metrics:new_counter(?BADGE),
   ok.
 
 clone_request() ->
@@ -52,6 +54,9 @@ load_success() ->
 
 load_error() ->
   folsom_metrics:notify({?LOAD_ERROR, {inc, 1}}).
+
+badge_request() ->
+  folsom_metrics:notify({?BADGE, {inc, 1}}).
 
 -spec retrieve_and_flush() -> map().
 retrieve_and_flush() ->

@@ -15,7 +15,7 @@
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
--define(DB, filename:join([oc_utils:get_priv_dir(), atom_to_list(?EMBEDDED_STORAGE) ++ ".db"])).
+-define(DB, filename:join([oc_utils:get_priv_dir(), atom_to_list(?TASKS_STORAGE) ++ ".db"])).
 
 all() ->
   [

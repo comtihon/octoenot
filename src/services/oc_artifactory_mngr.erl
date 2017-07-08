@@ -36,7 +36,7 @@ load_package(Name, Tag, PackagePath, Erl) ->
   Path = get_package_url(Host, Repo, Name, Tag, Erl, PackageName),
   Cmd = lists:flatten(io_lib:format(?LOAD_CMD, [User, Pass, Path, PackagePath])),
   oc_logger:debug("run ~p", [Cmd]),  % TODO use erlang http client (or hackney lib)
-  try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
+  try oc_utils:exec(Cmd, [sync, {stderr, stdout}, stdout]) of
     {ok, _Res} ->
       oc_metrics_mngr:load_success(),
       true;

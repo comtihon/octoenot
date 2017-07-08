@@ -78,7 +78,7 @@ init([]) ->
   ets:new(?ETS, [named_table, {read_concurrency, true}, protected]),
   erlang:send_after(?CLEAN_INTERVAL, self(), clean),
   erlang:send_after(?TASK_CHECK_INTERVAL, self(), check),
-  {ok, Pid} = oc_sqlite_mngr:connect(),
+  {ok, Pid} = oc_sqlite_mngr:connect(?TASKS_STORAGE),
   {ok, #state{sqlite_db = Pid}}.
 
 handle_call({postpone, Name, Url, Tag}, _From, State = #state{sqlite_db = Db}) ->

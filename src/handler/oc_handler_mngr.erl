@@ -27,7 +27,7 @@ start_callback() ->
   Dispatch = ?ROUTES(
     [
       {"/callback", oc_callback_handler, #{}},
-      {"/badge", oc_badge_handler, #{}},
+      {"/badge/[...]", oc_badge_handler, #{}},
       {'_', oc_notfound_handler, #{}}
     ]),
   {ok, _} = cowboy:start_clear(?LISTENER, 100, [{port, Port}], #{env => #{dispatch => Dispatch}}),

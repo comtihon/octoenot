@@ -19,15 +19,15 @@
 -export([clone_repo/3, check_config/3, build_package/2]).
 
 -spec clone_repo(string(), binary(), binary()) -> string().
-clone_repo(Name, Url, Tag) ->
-  oc_logger:info("clone repo ~p ~p ~p", [Name, Url, Tag]),
+clone_repo(FullName, Url, Tag) ->
+  oc_logger:info("clone repo ~p ~p ~p", [FullName, Url, Tag]),
   oc_metrics_mngr:clone_request(),
   {ok, Dir} = application:get_env(octocoon, build_dir),
-  Path = filename:join([Dir, Name]),
+  Path = filename:join([Dir, FullName]),
   Cmd = lists:flatten(io_lib:format(?CLONE_CMD, [Tag, Url, Path])),
   os:cmd("rm -Rf " ++ Path),
   oc_logger:debug("run ~p", [Cmd]),
-  try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
+  try oc_utils:exec(Cmd, [sync, {stderr, stdout}, stdout]) of
     {ok, _} -> Path;
     {error, Err} ->
       Code = proplists:get_value(exit_status, Err),
@@ -61,7 +61,7 @@ build_package(Erl, Path) ->
   Prefix = activate_erl_cmd(Erl, SystemErl),
   Cmd = lists:flatten(io_lib:format(?PACKAGE_CMD, [Path])),
   oc_logger:debug("run ~s", [Prefix ++ Cmd]),
-  try exec:run(Cmd, [sync, {stderr, stdout}, stdout]) of
+  try oc_utils:exec(Cmd, [sync, {stderr, stdout}, stdout]) of
     {ok, Res} ->
       Stdout = proplists:get_value(stdout, Res),
       oc_metrics_mngr:build_success(),

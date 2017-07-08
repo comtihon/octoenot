@@ -15,3 +15,4 @@
 -define(BUILD_SUCCESS, build_success).
 -define(LOAD, load).
 -define(LOAD_ERROR, load_error).
+-define(BADGE, badge).

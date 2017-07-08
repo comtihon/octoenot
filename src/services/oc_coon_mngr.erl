@@ -16,7 +16,7 @@
 %% TODO install coon if not.
 -spec init() -> ok | error.
 init() ->
-  Res = exec:run("coon -v", [sync, stdout, stderr]),
+  Res = oc_utils:exec("coon -v", [sync, stdout, stderr]),
   case Res of
     {error, Err} ->
       Status = proplists:get_value(exit_status, Err),

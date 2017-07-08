@@ -41,7 +41,7 @@ ensure_kerl() ->
 
 -spec kerl_installations(string()) -> {ok, list({string(), string()})} | error.
 kerl_installations(Executable) ->
-  Res = exec:run(Executable ++ " list installations", [sync, stdout, stderr]),
+  Res = oc_utils:exec(Executable ++ " list installations", [sync, stdout, stderr]),
   case Res of
     {error, Err} ->
       Status = proplists:get_value(exit_status, Err),
@@ -85,7 +85,7 @@ ensure_kerl(undefined) ->  % install kerl clause
 
 %% @private
 install_kerl(KerlPwd) ->
-  Res = exec:run(?GET_KERL_CMD(KerlPwd), [sync, stdout, stderr]),
+  Res = oc_utils:exec(?GET_KERL_CMD(KerlPwd), [sync, stdout, stderr]),
   case Res of
     {ok, _} ->
       os:cmd("chmod +x " ++ KerlPwd),
@@ -100,7 +100,7 @@ install_kerl(KerlPwd) ->
 
 %% @private
 kerl_version(Kerl) ->
-  Res = exec:run(Kerl ++ " version", [sync, stdout, stderr]),
+  Res = oc_utils:exec(Kerl ++ " version", [sync, stdout, stderr]),
   case Res of
     {error, _} -> error;
     {ok, Reply} ->
