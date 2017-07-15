@@ -21,7 +21,7 @@
               repo => "example-repo-local"
            }
       },
-      {build_per_minutes, 1},
+      {delay_between_build, 1}, %% delay in minutes, which limits build frequency. 0 for no delay
       {build_dir, "/tmp/octocoon"},
       {email,
           #{

@@ -58,9 +58,8 @@ init([]) ->
   {ok, #state{disable_prebuild = Disable, default_erl = DefaultErl}}.
 
 handle_call({load, Name, Url, Tag}, _From, State = #state{disable_prebuild = Disable, default_erl = Default}) ->
-  Path = oc_loader_logic:clone_repo(binary_to_list(Name), Url, Tag),
-  Erls = oc_loader_logic:check_config(Path, Disable, Default),
-  build_with_all_erl(Name, Tag, Path, Erls),
+  Path = oc_git_mngr:clone_repo(binary_to_list(Name), Url, Tag),
+  try_build(Path, Name, Tag, Disable, Default),
   {reply, ok, State}.
 
 handle_cast(_Request, State) ->
@@ -79,6 +78,20 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 %% @private
+try_build(undefined, Name, Tag, _, _) ->
+  oc_logger:warn("Clone error for ~p:~p", [Name, Tag]);
+try_build(Path, Name, Tag, Disable, Default) ->
+  try
+    Erls = oc_loader_logic:check_config(Path, Disable, Default),
+    build_with_all_erl(Name, Tag, Path, Erls)
+  catch
+    throw:{error, Error} ->
+      notify_user(Path, Name, Tag, Error, undefined);
+    throw:{error, Error, Msg} ->
+      notify_user(Path, Name, Tag, Error, Msg)
+  end.
+
+%% @private
 %% Build package with all erlang versions and load to remote repo
 build_with_all_erl(Name, Tag, Path, Erls) ->
   oc_logger:info("erls ~p", [Erls]),
@@ -92,13 +105,9 @@ build_with_erl(Erl, Path, Name, Tag) ->
     PackagePath = oc_loader_logic:build_package(Erl, VersionedPath),
     oc_artifactory_mngr:load_package(Name, Tag, PackagePath, Erl),
     oc_database_holder:add_package(Name, Tag, Erl)
-  catch
-    throw:{error, ?BUILD_FAILURE} -> ok;  % TODO notify user
-    throw:{error, ?LOAD_FAILURE} -> ok  % TODO notify user
   after
     os:cmd("rm -Rf " ++ VersionedPath)  % remove tmp vsn dir
   end.
-
 
 %% @private
 %% Copy cloned repo to repoErlVsn dir.
@@ -110,3 +119,14 @@ ensure_path(Path, Erl) ->
   ok = filelib:ensure_dir(VersionedDir),
   os:cmd("cp -r " ++ Path ++ " " ++ VersionedDir),
   VersionedDir.
+
+%% @private
+notify_user(Path, Name, Tag, Error, Msg) ->
+  Email = oc_git_mngr:get_last_commit_email(Path),
+  case oc_resource_holder:get_email_resource(<<"build_failed">>) of
+    undefined ->
+      oc_logger:err("No email body for build_failed!");
+    Body ->
+      Filled = lists:flatten(io_lib:format(Body, [Name, Tag, Error, Msg])),
+      oc_email_mngr:send_mail(Email, Name ++ " build failed", Filled)
+  end.

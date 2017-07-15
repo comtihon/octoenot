@@ -13,25 +13,18 @@ erlang-inets  \
 erlang-dev  \
 erlang-syntax-tools  \
 erlang-tools  \
-erlang-xmerl \
 erlang-asn1 \
 erlang-compiler \
-erlang-erl-interface \
 erlang-kernel \
-erlang-orber \
 erlang-os-mon \
-erlang-otp-mibs \
 erlang-parsetools \
-erlang-percept \
-erlang-public-key \
 erlang-reltool \
 erlang-runtime-tools \
+erlang-public-key \
 erlang-sasl \
-erlang-snmp \
 erlang-ssh \
 erlang-ssl \
-erlang-stdlib \
-erlang-typer
+erlang-stdlib
 
 
 EXPOSE 4567

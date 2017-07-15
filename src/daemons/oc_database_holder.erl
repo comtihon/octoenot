@@ -2,7 +2,7 @@
 %%% @author tihon
 %%% @copyright (C) 2017, <COMPANY>
 %%% @doc
-%%%
+%%% Service for storing unique (can be only one) connection to database.
 %%% @end
 %%% Created : 08. Jul 2017 14:34
 %%%-------------------------------------------------------------------

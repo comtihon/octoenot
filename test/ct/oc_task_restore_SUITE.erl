@@ -11,7 +11,6 @@
 
 -compile(export_all).
 
--include("oc_tasks.hrl").
 -include("oc_database.hrl").
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
@@ -21,7 +20,8 @@
 
 all() ->
   [
-    test_restore_all_tasks
+    test_restore_all_tasks,
+    test_same_tasks_filtering
   ].
 
 init_per_suite(Config) ->
@@ -66,6 +66,36 @@ test_restore_all_tasks(_) ->
   true = accert_added(<<"ns/proj1">>, <<"url1">>, <<"1.0.0">>),
   true = accert_added(<<"ns/proj2">>, <<"url2">>, <<"1.0.0">>),
   true = accert_added(<<"ns/proj3">>, <<"url3">>, <<"1.0.0">>),
+
+  {ok, Db1} = sqlite3:open(anonymous, [{file, ?TASKS_DB}]),
+  All = oc_sqlite_mngr:get_all_tasks(Db1),
+  ?assertEqual([], proplists:get_value(rows, All, [])),
+  sqlite3:close(Db1),
+  ok.
+
+%% If two requests with same tags for the same repo arrived - only one should be done
+test_same_tasks_filtering(_) ->
+  ct:pal("------------------~p------------------~n", [test_same_tasks_filtering]),
+  {ok, Db} = oc_sqlite_mngr:connect(?TASKS_STORAGE),
+  true = oc_sqlite_mngr:add_task(Db, <<"ns/proj1">>, <<"url1">>, <<"1.0.0">>),
+  true = oc_sqlite_mngr:add_task(Db, <<"ns/proj1">>, <<"url1">>, <<"1.0.0">>),
+  true = oc_sqlite_mngr:add_task(Db, <<"ns/proj1">>, <<"url1">>, <<"1.0.1">>),
+  sqlite3:close(Db),
+
+  Self = self(),
+  meck:new(oc_loader_mngr),
+  meck:expect(oc_loader_mngr, add_package,
+    fun(Name, Url, Tag) ->
+      Self ! {add, Name, Url, Tag},
+      ok
+    end),
+
+  {ok, Pid} = oc_namespace_limiter:start_link(),
+  Pid ! check,
+  timer:sleep(1000),  % wait for all tasks to delete from db
+  true = accert_added(<<"ns/proj1">>, <<"url1">>, <<"1.0.0">>),
+  true = accert_added(<<"ns/proj1">>, <<"url1">>, <<"1.0.1">>),
+  false = accert_added(<<"ns/proj1">>, <<"url1">>, <<"1.0.0">>),
 
   {ok, Db1} = sqlite3:open(anonymous, [{file, ?TASKS_DB}]),
   All = oc_sqlite_mngr:get_all_tasks(Db1),

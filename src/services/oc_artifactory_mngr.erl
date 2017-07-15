@@ -45,7 +45,7 @@ load_package(Name, Tag, PackagePath, Erl) ->
       StdErr = proplists:get_value(stdout, Err, [undefined]),
       oc_logger:warn("~p failed (~p) ~p", [Cmd, Code, StdErr]),
       oc_metrics_mngr:load_error(),
-      throw({error, ?LOAD_FAILURE})
+      throw({error, ?LOAD_FAILURE, StdErr})
   catch
     _:Err ->
       oc_logger:warn("~p failed (~p)", [Cmd, Err]),

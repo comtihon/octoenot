@@ -11,11 +11,12 @@
 
 -compile(export_all).
 
--include("oc_tasks.hrl").
+-include("oc_database.hrl").
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
--define(DB, filename:join([oc_utils:get_priv_dir(), atom_to_list(?TASKS_STORAGE) ++ ".db"])).
+-define(PACKAGE_DB, filename:join([oc_utils:get_priv_dir(), atom_to_list(?PACKAGES_STORAGE) ++ ".db"])).
+-define(TASKS_DB, filename:join([oc_utils:get_priv_dir(), atom_to_list(?TASKS_STORAGE) ++ ".db"])).
 
 all() ->
   [
@@ -36,7 +37,8 @@ init_per_testcase(_, Config) ->
   Config.
 
 end_per_testcase(_, Config) ->
-  ok = file:delete(?DB),
+  file:delete(?PACKAGE_DB),
+  file:delete(?TASKS_DB),
   meck:unload(),
   Config.
 
@@ -48,12 +50,13 @@ test_build_default(_) ->
   ct:pal("------------------~p------------------~n", [test_build_default]),
   {ok, _} = oc_loader_sup:start_link(),
   Self = self(),
-  meck:new(oc_loader_logic),
-  meck:expect(oc_loader_logic, clone_repo,
+  meck:new(oc_git_mngr),
+  meck:expect(oc_git_mngr, clone_repo,
     fun(Name, Url, Tag) ->
       Self ! {clone, {Name, Url, Tag}},
       "ClonedRepoPath"
     end),
+  meck:new(oc_loader_logic),
   meck:expect(oc_loader_logic, check_config, fun(_, _, _) -> ["18"] end),
   meck:expect(oc_loader_logic, build_package,
     fun(Erl, VersionedPath) ->
@@ -74,12 +77,13 @@ test_build_several(_) ->
   ct:pal("------------------~p------------------~n", [test_build_several]),
   {ok, _} = oc_loader_sup:start_link(),
   Self = self(),
-  meck:new(oc_loader_logic),
-  meck:expect(oc_loader_logic, clone_repo,
+  meck:new(oc_git_mngr),
+  meck:expect(oc_git_mngr, clone_repo,
     fun(Name, Url, Tag) ->
       Self ! {clone, {Name, Url, Tag}},
       "ClonedRepoPath"
     end),
+  meck:new(oc_loader_logic),
   meck:expect(oc_loader_logic, check_config, fun(_, _, _) -> ["18", "19", "20"] end),
   meck:expect(oc_loader_logic, build_package,
     fun(Erl, VersionedPath) ->

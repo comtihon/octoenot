@@ -2,7 +2,8 @@
 %%% @author tihon
 %%% @copyright (C) 2017, <COMPANY>
 %%% @doc
-%%%
+%%% Service for storing resources under priv/email dir. Try to update them
+%%% periodically. Stores emails by language keys.
 %%% @end
 %%% Created : 11. Jun 2017 14:31
 %%%-------------------------------------------------------------------

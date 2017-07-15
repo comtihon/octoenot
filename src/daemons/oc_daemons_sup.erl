@@ -61,7 +61,8 @@ init([]) ->
   ResourceHolder = ?CHILD(oc_resource_holder, worker),
   ConfHolder = ?CHILD(oc_conf_holder, worker),
   DbHolder = ?CHILD(oc_database_holder, worker),
-  {ok, {{one_for_one, 1000, 3600}, [DbHolder, NSLimiter, ResourceHolder, ConfHolder]}}.
+  BadgesCache = ?CHILD(oc_badges_cache, worker),
+  {ok, {{one_for_one, 1000, 3600}, [DbHolder, NSLimiter, ResourceHolder, ConfHolder, BadgesCache]}}.
 
 %%%===================================================================
 %%% Internal functions

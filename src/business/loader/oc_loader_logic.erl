@@ -12,35 +12,10 @@
 -include("oc_coonfig.hrl").
 -include("oc_error.hrl").
 
--define(CLONE_CMD, "git clone -b ~s ~s ~s").
--define(PACKAGE_CMD, "cd ~s && coon package").
+-define(PACKAGE_CMD, "coon package").
 
 %% API
--export([clone_repo/3, check_config/3, build_package/2]).
-
--spec clone_repo(string(), binary(), binary()) -> string().
-clone_repo(FullName, Url, Tag) ->
-  oc_logger:info("clone repo ~p ~p ~p", [FullName, Url, Tag]),
-  oc_metrics_mngr:clone_request(),
-  {ok, Dir} = application:get_env(octocoon, build_dir),
-  Path = filename:join([Dir, FullName]),
-  Cmd = lists:flatten(io_lib:format(?CLONE_CMD, [Tag, Url, Path])),
-  os:cmd("rm -Rf " ++ Path),
-  oc_logger:debug("run ~p", [Cmd]),
-  try oc_utils:exec(Cmd, [sync, {stderr, stdout}, stdout]) of
-    {ok, _} -> Path;
-    {error, Err} ->
-      Code = proplists:get_value(exit_status, Err),
-      StdErr = proplists:get_value(stdout, Err, [undefined]),
-      oc_logger:warn("~p failed (~p): ~s", [Cmd, Code, StdErr]),
-      oc_metrics_mngr:clone_error(),
-      throw({error, ?CLONE_FAILURE})
-  catch
-    _:Err ->
-      oc_logger:warn("~p failed (~p)", [Cmd, Err]),
-      oc_metrics_mngr:clone_error(),
-      throw({error, ?CLONE_FAILURE})
-  end.
+-export([check_config/3, build_package/2]).
 
 -spec check_config(string(), boolean(), string()) -> list(string()).
 check_config(Path, DisablePrebuild, DefaultErl) ->
@@ -59,9 +34,8 @@ build_package(Erl, Path) ->
   oc_metrics_mngr:build_request(),
   SystemErl = oc_conf_holder:get_system_erl(),
   Prefix = activate_erl_cmd(Erl, SystemErl),
-  Cmd = lists:flatten(io_lib:format(?PACKAGE_CMD, [Path])),
-  oc_logger:debug("run ~s", [Prefix ++ Cmd]),
-  try oc_utils:exec(Cmd, [sync, {stderr, stdout}, stdout]) of
+  oc_logger:debug("run ~s", [Prefix ++ ?PACKAGE_CMD]),
+  try oc_utils:exec(?PACKAGE_CMD, [sync, {stderr, stdout}, stdout, {cd, Path}]) of
     {ok, Res} ->
       Stdout = proplists:get_value(stdout, Res),
       oc_metrics_mngr:build_success(),
@@ -69,12 +43,12 @@ build_package(Erl, Path) ->
     {error, Err} ->
       Code = proplists:get_value(exit_status, Err),
       StdErr = proplists:get_value(stdout, Err, [undefined]),
-      oc_logger:warn("~p failed (~p) ~p", [Cmd, Code, StdErr]),
+      oc_logger:warn("~p failed (~p) ~p", [?PACKAGE_CMD, Code, StdErr]),
       oc_metrics_mngr:build_error(),
-      throw({error, ?BUILD_FAILURE})
+      throw({error, ?BUILD_FAILURE, ["Erlang Vsn: ", Erl, StdErr]})
   catch
     _:Err ->
-      oc_logger:warn("~p failed (~p)", [Cmd, Err]),
+      oc_logger:warn("~p failed (~p)", [?PACKAGE_CMD, Err]),
       oc_metrics_mngr:build_error(),
       throw({error, ?BUILD_FAILURE})
   end.
@@ -108,7 +82,7 @@ get_package_if_succeed(Output) ->
   case Filtered of
     [] ->
       oc_logger:warn("~p", [Output]),
-      throw({error, ?BUILD_FAILURE});
+      throw({error, ?BUILD_FAILURE, Output});
     [First | _] -> % normally it should be one
       PackPath = lists:last(string:tokens(binary_to_list(First), " ")),
       string:strip(PackPath, right, $\n)

@@ -9,7 +9,6 @@
 -module(oc_github_mngr).
 -author("tihon").
 
--define(CLONE_CMD, "git clone ~s ~s --depth=1").
 -define(GITHUB_URL, "https://github.com/~s/~s.git").
 
 %% API
@@ -18,22 +17,12 @@
 -spec request_build_system(binary(), binary()) -> binary().
 request_build_system(Namespace, PackageName) ->
   {ok, Dir} = application:get_env(octocoon, build_dir),
-  Path = filename:join([Dir, Namespace, PackageName]),
+  Path = filename:join([Dir, <<"ensure">>, Namespace, PackageName]),
   Url = lists:flatten(io_lib:format(?GITHUB_URL, [Namespace, PackageName])),
-  Cmd = lists:flatten(io_lib:format(?CLONE_CMD, [Url, Path])),
-  oc_logger:debug("run ~p", [Cmd]),
-  try oc_utils:exec(Cmd, [sync, {stderr, stdout}, stdout]) of
-    {ok, _} -> get_build_system(Path);
-    {error, Err} ->
-      Code = proplists:get_value(exit_status, Err),
-      StdErr = proplists:get_value(stdout, Err, [undefined]),
-      oc_logger:warn("~p failed (~p): ~s", [Cmd, Code, StdErr]),
-      oc_metrics_mngr:clone_error(),
-      <<"undefined">>
-  catch
-    _:Err ->
-      oc_logger:warn("~p failed (~p)", [Cmd, Err]),
-      oc_metrics_mngr:clone_error(),
+  try oc_git_mngr:clone_with_depth_1(Url, Path) of
+    true ->
+      get_build_system(Path);
+    false ->
       <<"undefined">>
   after
     os:cmd("rm -Rf " ++ binary_to_list(Path))

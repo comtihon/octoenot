@@ -2,8 +2,11 @@
 %%% @author tihon
 %%% @copyright (C) 2017, <COMPANY>
 %%% @doc
-%%% Stores ets with timestamps of all builds. Checks builds exceed
-%%% limited period in config. Purges timestamps periodically.
+%%% Stores ets with timestamps of every build. If build become too
+%%% frequently - return false on check package. After this build can
+%%% be saved with postpone_build/2 to sqlite. Every ?TASK_CHECK_INTERVAL
+%%% checks sqlite for postponed builds and run them.
+%%% Groups same postponed builds to one.
 %%% @end
 %%% Created : 04. Jun 2017 18:57
 %%%-------------------------------------------------------------------
@@ -12,7 +15,7 @@
 
 -behaviour(gen_server).
 
--include("oc_tasks.hrl").
+-include("oc_database.hrl").
 
 %% API
 -export([start_link/0, check_package/1, postpone_build/3]).
@@ -28,7 +31,7 @@
 -define(SERVER, ?MODULE).
 -define(ETS, namespace_storage).
 -define(CLEAN_INTERVAL, 900000).  %15 min
--define(TASK_CHECK_INTERVAL, 300000).  % 5 min
+-define(TASK_CHECK_INTERVAL, 1000).  % 1 sec
 
 -record(state, {sqlite_db :: pid()}).
 
@@ -39,12 +42,14 @@
 %% If build exceeds limit per minute - return false
 -spec check_package(binary()) -> boolean().
 check_package(FullName) ->
+  Now = oc_utils:now_to_timestamp(),
   case ets:lookup(?ETS, FullName) of
-    [] -> true;
+    [] ->
+      ets:insert(?ETS, {FullName, Now}),
+      true;
     [{_, LastBuildTS}] ->
-      {ok, Limit} = application:get_env(octocoon, build_per_minutes),
+      {ok, Limit} = application:get_env(octocoon, delay_between_build),
       LimitMilliseconds = Limit * 60000,
-      Now = oc_utils:now_to_timestamp(),
       case Now > LastBuildTS + LimitMilliseconds of
         true ->
           ets:insert(?ETS, {FullName, Now}),
@@ -75,7 +80,7 @@ start_link() ->
 %%%===================================================================
 
 init([]) ->
-  ets:new(?ETS, [named_table, {read_concurrency, true}, protected]),
+  ets:new(?ETS, [named_table, {read_concurrency, true}, public]),
   erlang:send_after(?CLEAN_INTERVAL, self(), clean),
   erlang:send_after(?TASK_CHECK_INTERVAL, self(), check),
   {ok, Pid} = oc_sqlite_mngr:connect(?TASKS_STORAGE),
@@ -92,7 +97,7 @@ handle_cast(_Request, State) ->
 
 handle_info(check, State = #state{sqlite_db = Db}) ->
   All = oc_sqlite_mngr:get_all_tasks(Db),
-  lists:foreach(fun(Task) -> restart_task(Db, Task) end, proplists:get_value(rows, All, [])),
+  lists:foreach(fun(Task) -> restart_task(Db, Task) end, unique_rows(All)),
   erlang:send_after(?TASK_CHECK_INTERVAL, self(), check),
   {noreply, State};
 handle_info(clean, State) ->
@@ -117,3 +122,8 @@ restart_task(Db, {Name, Url, Tag}) ->
   ets:insert(?ETS, {Name, Now}),
   ok = oc_loader_mngr:add_package(Name, Url, Tag),
   true = oc_sqlite_mngr:del_task(Db, Name).
+
+%% @private
+unique_rows(All) ->
+  Rows = proplists:get_value(rows, All, []),
+  sets:to_list(sets:from_list(Rows)).

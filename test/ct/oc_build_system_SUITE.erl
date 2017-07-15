@@ -12,7 +12,6 @@
 -compile(export_all).
 
 -include("oc_database.hrl").
--include("oc_tasks.hrl").
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
@@ -45,19 +44,19 @@ test_get_build_system(_) ->
   meck:expect(oc_utils, exec, fun(_, _) -> {ok, []} end),
   {ok, Dir} = application:get_env(octocoon, build_dir),
 %%  populate coon app
-  PathC = filename:join([Dir, <<"ns/test_app_coon/">>]),
+  PathC = filename:join([Dir, <<"ensure/ns/test_app_coon/">>]),
   os:cmd("mkdir -p " ++ binary_to_list(PathC)),
   file:write_file(filename:join([PathC, "coonfig.json"]), <<"">>),
   file:write_file(filename:join([PathC, "somefile"]), <<"">>),
   ?assertEqual(<<"coon">>, oc_github_mngr:request_build_system(<<"ns">>, <<"test_app_coon">>)),
 %%  populate rebar app
-  PathR = filename:join([Dir, <<"ns/test_app_rebar">>]),
+  PathR = filename:join([Dir, <<"ensure/ns/test_app_rebar">>]),
   os:cmd("mkdir -p " ++ binary_to_list(PathR)),
   file:write_file(filename:join([PathR, "rebar.config"]), <<"">>),
   file:write_file(filename:join([PathR, "somefile"]), <<"">>),
   ?assertEqual(<<"rebar">>, oc_github_mngr:request_build_system(<<"ns">>, <<"test_app_rebar">>)),
 %%  populate erlang.mk
-  PathE = filename:join([Dir, <<"ns/test_app_emk">>]),
+  PathE = filename:join([Dir, <<"ensure/ns/test_app_emk">>]),
   os:cmd("mkdir -p " ++ binary_to_list(PathE)),
   file:write_file(filename:join([PathE, "erlang.mk"]), <<"">>),
   file:write_file(filename:join([PathE, "somefile"]), <<"">>),

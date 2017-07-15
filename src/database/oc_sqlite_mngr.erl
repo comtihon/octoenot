@@ -9,7 +9,6 @@
 -module(oc_sqlite_mngr).
 -author("tihon").
 
--include("oc_tasks.hrl").
 -include("oc_database.hrl").
 
 -define(SELECT_PACKAGES, "select ~s, ~s from ~s where ~s = '~s' and ~s = '~s'").

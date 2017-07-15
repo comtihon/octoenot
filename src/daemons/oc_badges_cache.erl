@@ -2,17 +2,20 @@
 %%% @author tihon
 %%% @copyright (C) 2017, <COMPANY>
 %%% @doc
-%%% Service for storing kerl executables and installations.
+%%% Store build system data for badges to minimize git cloning.
+%%% Stores data in ets. Invalidates cache periodically.
 %%% @end
-%%% Created : 18. Jun 2017 20:17
+%%% Created : 14. Jul 2017 3:46 PM
 %%%-------------------------------------------------------------------
--module(oc_conf_holder).
+-module(oc_badges_cache).
 -author("tihon").
 
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, get_kerl_installation/1, get_kerl_executable/0, get_system_erl/0]).
+-export([start_link/0, remember/3, lookup/2]).
+
+-include("oc_database.hrl").
 
 %% gen_server callbacks
 -export([init/1,
@@ -23,27 +26,26 @@
   code_change/3]).
 
 -define(SERVER, ?MODULE).
--define(CONF_ETS, oc_conf).
+-define(BADGES_CACHE, ?MODULE).
+-define(CLEAN_INTERVAL, timer:minutes(1)).
 
 -record(state, {}).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
--spec get_kerl_installation(string()) -> {ok, string()} | undefined .
-get_kerl_installation(Erl) ->
-  case ets:lookup(?CONF_ETS, Erl) of
+-spec remember(binary(), binary(), binary()) -> ok.
+remember(Ns, Name, BuildSystem) ->
+  FullName = <<Ns/binary, <<"/">>/binary, Name/binary>>,
+  gen_server:cast(?MODULE, {remember, FullName, BuildSystem}).
+
+-spec lookup(binary(), binary()) -> binary() | undefined.
+lookup(Ns, Name) ->
+  FullName = <<Ns/binary, <<"/">>/binary, Name/binary>>,
+  case ets:lookup(?BADGES_CACHE, FullName) of
     [] -> undefined;
-    [{_, Path}] -> {ok, Path}
+    [{_, Bs}] -> Bs
   end.
-
--spec get_kerl_executable() -> string().
-get_kerl_executable() ->
-  ets:lookup_element(?CONF_ETS, kerl, 2).
-
--spec get_system_erl() -> string().
-get_system_erl() ->
-  ets:lookup_element(?CONF_ETS, erl, 2).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -61,19 +63,23 @@ start_link() ->
 %%%===================================================================
 
 init([]) ->
-  ets:new(?CONF_ETS, [named_table, protected, {read_concurrency, true}]),
-  SystemErl = oc_erlang_mngr:erlang_version(),
-  {ok, KerlPath} = oc_erlang_mngr:ensure_kerl(),
-  {ok, KerlInstallations} = oc_erlang_mngr:kerl_installations(KerlPath),
-  save_erl(SystemErl, KerlPath, KerlInstallations),
+  ets:new(?BADGES_CACHE, [named_table, protected, {read_concurrency, true}]),
+  erlang:send_after(?CLEAN_INTERVAL, self(), clean),
   {ok, #state{}}.
 
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
+handle_cast({remember, FullName, BuildSystem}, State) ->
+  ets:insert(?BADGES_CACHE, {FullName, BuildSystem}),
+  {noreply, State};
 handle_cast(_Request, State) ->
   {noreply, State}.
 
+handle_info(clean, State) ->
+  ets:delete_all_objects(?BADGES_CACHE),
+  erlang:send_after(?CLEAN_INTERVAL, self(), clean),
+  {noreply, State};
 handle_info(_Info, State) ->
   {noreply, State}.
 
@@ -86,8 +92,3 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-%% @private
-save_erl(Default, KerlPath, Installations) ->
-  ets:insert(?CONF_ETS, {erl, Default}),
-  ets:insert(?CONF_ETS, {kerl, KerlPath}),
-  ets:insert(?CONF_ETS, Installations).
