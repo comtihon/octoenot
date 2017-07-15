@@ -1,0 +1,25 @@
+version: '3.3'
+services:
+  octocoon:
+    build: ../.
+    ports:
+     - "4567:4567"
+     - "4232:4232"
+    depends_on:
+     - artifactory
+  artifactory:
+    image: "mattgruter/artifactory"
+    ports:
+     - "8080:8080"
+  influxdb:
+    image: "influxdb:1.3"
+  collectd:
+    image: "yaronr/collectd"
+    depends_on:
+     - influxdb
+  grafana:
+    image: "grafana"
+    ports:
+     - "3000:3000"
+    depends_on:
+     - influxdb

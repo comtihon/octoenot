@@ -38,7 +38,7 @@ start_mertics() ->
   {ok, #{port := Port}} = application:get_env(octocoon, mertics),
   Dispatch = ?ROUTES(
     [
-      {"/callback", oc_callback_handler, #{}},
+      {"/statistics", oc_statistics_handler, #{}},
       {'_', oc_notfound_handler, #{}}
     ]),
   {ok, _} = cowboy:start_clear(?STATISTICS, 2, [{port, Port}], #{env => #{dispatch => Dispatch}}),
