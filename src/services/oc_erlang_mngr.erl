@@ -121,5 +121,5 @@ parse_installations(Installations) ->
 %% @private
 split_installation(Installation) ->
   [Vsn, Path] = binary:split(Installation, <<" ">>),
-  [AbsVsn, _] = binary:split(Vsn, <<".">>),
+  [AbsVsn | _] = binary:split(Vsn, <<".">>),
   {binary_to_list(AbsVsn), binary_to_list(Path)}.

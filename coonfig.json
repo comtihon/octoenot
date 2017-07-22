@@ -54,5 +54,14 @@
       "url": "https://github.com/eproxus/meck.git",
       "tag": "0.8.4"
     }
+  ],
+  "install": [
+    {"shell": "coon release"},
+    {"shell": "mkdir /var/log/octocoon"},
+    {"shell": "id -u octocoon &>/dev/null || useradd octocoon"},
+    {"shell": "chown -R octocoon /var/log/octocoon"},
+    {"shell": "cp _rel/octocoon/lib/octocoon-*/priv/octocoon.service /etc/systemd/system/"},
+    {"shell": "systemctl enable octocoon"},
+    {"shell": "systemctl start octocoon"}
   ]
 }

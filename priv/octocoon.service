@@ -1,0 +1,17 @@
+[Unit]
+Wants=artifactory.service
+
+[Service]
+Type=simple
+User=octocoon
+Group=octocoon
+Environment=HOME=/home/octocoon
+Environment=SHELL=/bin/bash
+WorkingDirectory=/home/octocoon/
+ExecStart=/opt/octocoon/_rel/octocoon/bin/octocoon foreground
+ExecStop=/opt/octocoon/_rel/octocoon/bin/octocoon stop
+ExecReload=/opt/octocoon/_rel/octocoon/bin/octocoon restart
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
