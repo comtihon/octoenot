@@ -126,7 +126,12 @@ load_htmls(Locale, Path, Files) ->
       case lists:suffix(".html", File) of
         true ->  % html file, load it
           {ok, Content} = file:read_file(Path ++ File),
-          ets:insert(?EMAIL_ETS, {{oc_utils:to_lower(Locale), list_to_binary(File)}, binary_to_list(Content)});
+          ets:insert(?EMAIL_ETS, {{oc_utils:to_lower(Locale), get_name(File)}, binary_to_list(Content)});
         false -> ok  % not html file
       end
     end, Files).
+
+%% @private
+get_name(Html) ->
+  [Name | _] = string:split(Html, ".html"),
+  list_to_binary(Name).

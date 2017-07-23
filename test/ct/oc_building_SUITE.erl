@@ -34,6 +34,7 @@ init_per_suite(Config) ->
 init_per_testcase(_, Config) ->
   ok = filelib:ensure_dir(oc_utils:get_priv_dir()),
   ok = oc_sqlite_mngr:init(),
+  ets:new(emails, [named_table]),
   Config.
 
 end_per_testcase(_, Config) ->
