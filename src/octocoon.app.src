@@ -31,7 +31,7 @@
       },
       {github,
           #{
-              secret => "OkxfHxv6GtmEkrEBm4IW"
+              secret => <<"OkxfHxv6GtmEkrEBm4IW">>
            }
       },
       {loader_pool,

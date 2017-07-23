@@ -15,7 +15,8 @@
   to_lower/1,
   now_to_timestamp/0,
   ts_to_timestamp/1,
-  exec/2]).
+  exec/2,
+  base16/1]).
 
 -spec get_priv_dir() -> string().
 get_priv_dir() ->
@@ -46,3 +47,6 @@ ts_to_timestamp({MegaSecs, Secs, MicroSecs}) ->
   {ok, pid(), pid()} | {ok, [{stdout | stderr, [binary()]}]} | {error, any()}.
 exec(Cmd, Args) ->
   exec:run(Cmd, Args).
+
+base16(Data) ->
+  io_lib:format("~64.16.0b", [binary:decode_unsigned(Data)]).

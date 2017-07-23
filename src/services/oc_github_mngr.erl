@@ -12,7 +12,7 @@
 -define(GITHUB_URL, "https://github.com/~s/~s.git").
 
 %% API
--export([request_build_system/2]).
+-export([request_build_system/2, get_signature/1]).
 
 -spec request_build_system(binary(), binary()) -> binary().
 request_build_system(Namespace, PackageName) ->
@@ -27,6 +27,12 @@ request_build_system(Namespace, PackageName) ->
   after
     os:cmd("rm -Rf " ++ binary_to_list(Path))
   end.
+
+-spec get_signature(binary()) -> string().
+get_signature(Body) ->
+  {ok, #{secret := Secret}} = application:get_env(octocoon, github),
+  Hmac = crypto:hmac(sha256, Secret, Body),
+  oc_utils:base16(Hmac).
 
 
 %% @private

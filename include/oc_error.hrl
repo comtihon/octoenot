@@ -14,3 +14,4 @@
 -define(BUILD_FAILURE, <<"Failed to build package">>).
 -define(LOAD_FAILURE, <<"Failed to load package">>).
 -define(NOT_A_COON, <<"Coonfig.json not found">>).
+-define(WRONG_SIGNATURE, <<"Wrong signature">>).
