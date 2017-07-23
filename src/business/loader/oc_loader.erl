@@ -83,7 +83,8 @@ try_build(undefined, Name, Tag, _, _) ->
 try_build(Path, Name, Tag, Disable, Default) ->
   try
     Erls = oc_loader_logic:check_config(Path, Disable, Default),
-    build_with_all_erl(Name, Tag, Path, Erls)
+    build_with_all_erl(Name, Tag, Path, Erls),
+    notify_success(Path, Name, Tag, Erls)
   catch
     throw:{error, Error} ->
       notify_user(Path, Name, Tag, Error, undefined);
@@ -129,4 +130,15 @@ notify_user(Path, Name, Tag, Error, Msg) ->
     Body ->
       Filled = lists:flatten(io_lib:format(Body, [Name, Tag, Error, Msg])),
       oc_email_mngr:send_mail(Email, Name ++ " build failed", Filled)
+  end.
+
+%% @private
+notify_success(Path, Name, Tag, Erlangs) ->
+  Email = oc_git_mngr:get_last_commit_email(Path),
+  case oc_resource_holder:get_email_resource(<<"build_success">>) of
+    undefined ->
+      oc_logger:err("No email body for build_success!");
+    Body ->
+      Filled = lists:flatten(io_lib:format(Body, [Name, Tag, Erlangs])),
+      oc_email_mngr:send_mail(Email, Name ++ " build succeed", Filled)
   end.
