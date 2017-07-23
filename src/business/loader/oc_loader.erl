@@ -124,20 +124,22 @@ ensure_path(Path, Erl) ->
 
 %% @private
 notify_user(Email, Name, Tag, Error, Msg) ->
+  NameStr = binary_to_list(Name),
   case oc_resource_holder:get_email_resource(<<"build_failed">>) of
     undefined ->
       oc_logger:err("No email body for build_failed!");
     Body ->
-      Filled = lists:flatten(io_lib:format(Body, [Name, Tag, Error, Msg])),
-      oc_email_mngr:send_mail(Email, Name ++ " build failed", Filled)
+      Filled = lists:flatten(io_lib:format(Body, [NameStr, Tag, Error, Msg])),
+      oc_email_mngr:send_mail(Email, NameStr ++ " build failed", Filled)
   end.
 
 %% @private
 notify_success(Email, Name, Tag, Erlangs) ->
+  NameStr = binary_to_list(Name),
   case oc_resource_holder:get_email_resource(<<"build_success">>) of
     undefined ->
       oc_logger:err("No email body for build_success!");
     Body ->
-      Filled = lists:flatten(io_lib:format(Body, [Name, Tag, Erlangs])),
-      oc_email_mngr:send_mail(Email, Name ++ " build succeed", Filled)
+      Filled = lists:flatten(io_lib:format(Body, [NameStr, Tag, Erlangs])),
+      oc_email_mngr:send_mail(Email, NameStr ++ " build succeed", Filled)
   end.
