@@ -56,6 +56,7 @@ test_build_default(_) ->
       Self ! {clone, {Name, Url, Tag}},
       "ClonedRepoPath"
     end),
+  meck:expect(oc_git_mngr, get_last_commit_email, fun(_) -> "Email" end),
   meck:new(oc_loader_logic),
   meck:expect(oc_loader_logic, check_config, fun(_, _, _) -> ["18"] end),
   meck:expect(oc_loader_logic, build_package,
@@ -83,6 +84,7 @@ test_build_several(_) ->
       Self ! {clone, {Name, Url, Tag}},
       "ClonedRepoPath"
     end),
+  meck:expect(oc_git_mngr, get_last_commit_email, fun(_) -> "Email" end),
   meck:new(oc_loader_logic),
   meck:expect(oc_loader_logic, check_config, fun(_, _, _) -> ["18", "19", "20"] end),
   meck:expect(oc_loader_logic, build_package,
