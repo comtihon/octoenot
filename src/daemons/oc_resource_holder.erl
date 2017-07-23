@@ -35,17 +35,18 @@
 %%% API
 %%%===================================================================
 -spec get_email_resource(binary()) -> undefined | string().
-get_email_resource(ResourceName) -> get_email_resource(undefined, ResourceName).
+get_email_resource(ResourceName) -> get_email_resource(?DEFAULT_LANG, ResourceName).
 
 %% Get html file's content for sending mails to user.
--spec get_email_resource(binary() | undefined, binary()) -> undefined | string().
+-spec get_email_resource(binary(), binary()) -> undefined | string().
 get_email_resource(Lang, ResourceName) ->
   case ets:lookup(?EMAIL_ETS, {Lang, ResourceName}) of
-    [] ->
+    [] when Lang /= ?DEFAULT_LANG ->
       case ets:lookup(?EMAIL_ETS, {?DEFAULT_LANG, ResourceName}) of
         [] -> undefined;
         [{_, Content}] -> Content
       end;
+    [] -> undefined;
     [{_, Content}] -> Content
   end.
 
