@@ -81,15 +81,16 @@ code_change(_OldVsn, State, _Extra) ->
 try_build(undefined, Name, Tag, _, _) ->
   oc_logger:warn("Clone error for ~p:~p", [Name, Tag]);
 try_build(Path, Name, Tag, Disable, Default) ->
+  Email = oc_git_mngr:get_last_commit_email(Path),
   try
     Erls = oc_loader_logic:check_config(Path, Disable, Default),
     build_with_all_erl(Name, Tag, Path, Erls),
-    notify_success(Path, Name, Tag, Erls)
+    notify_success(Email, Name, Tag, Erls)
   catch
     throw:{error, Error} ->
-      notify_user(Path, Name, Tag, Error, undefined);
+      notify_user(Email, Name, Tag, Error, undefined);
     throw:{error, Error, Msg} ->
-      notify_user(Path, Name, Tag, Error, Msg)
+      notify_user(Email, Name, Tag, Error, Msg)
   end.
 
 %% @private
@@ -122,8 +123,7 @@ ensure_path(Path, Erl) ->
   VersionedDir.
 
 %% @private
-notify_user(Path, Name, Tag, Error, Msg) ->
-  Email = oc_git_mngr:get_last_commit_email(Path),
+notify_user(Email, Name, Tag, Error, Msg) ->
   case oc_resource_holder:get_email_resource(<<"build_failed">>) of
     undefined ->
       oc_logger:err("No email body for build_failed!");
@@ -133,8 +133,7 @@ notify_user(Path, Name, Tag, Error, Msg) ->
   end.
 
 %% @private
-notify_success(Path, Name, Tag, Erlangs) ->
-  Email = oc_git_mngr:get_last_commit_email(Path),
+notify_success(Email, Name, Tag, Erlangs) ->
   case oc_resource_holder:get_email_resource(<<"build_success">>) of
     undefined ->
       oc_logger:err("No email body for build_success!");

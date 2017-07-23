@@ -10,7 +10,7 @@
 -author("tihon").
 
 %% API
--export([clone_repo/3, clone_with_depth_1/2, get_last_commit_email/1]).
+-export([get_last_commit_email/1, clone_repo/3, clone_with_depth_1/2]).
 
 -define(CLONE_CMD, "git clone -b ~s ~s ~s").
 -define(CLONE_FAST_CMD, "git clone ~s ~s --depth=1").
