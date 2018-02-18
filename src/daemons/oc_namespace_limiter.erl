@@ -48,7 +48,7 @@ check_package(FullName) ->
       ets:insert(?ETS, {FullName, Now}),
       true;
     [{_, LastBuildTS}] ->
-      {ok, Limit} = application:get_env(octocoon, delay_between_build),
+      {ok, Limit} = application:get_env(octoenot, delay_between_build),
       LimitMilliseconds = Limit * 60000,
       case Now > LastBuildTS + LimitMilliseconds of
         true ->

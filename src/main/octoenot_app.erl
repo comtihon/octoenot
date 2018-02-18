@@ -1,4 +1,4 @@
--module('octocoon_app').
+-module('octoenot_app').
 -behaviour(application).
 
 -export([start/2, stop/1]).
@@ -26,11 +26,11 @@
 start(_StartType, _StartArgs) ->
   ok = oc_sqlite_mngr:init(),
   ok = oc_artifactory_mngr:init(),
-  ok = oc_coon_mngr:init(),
+  ok = oc_enot_mngr:init(),
   ok = oc_email_mngr:init(),
   ok = oc_erlang_mngr:init(),
   ok = oc_metrics_mngr:init(),
-  case 'octocoon_sup':start_link() of
+  case 'octoenot_sup':start_link() of
     {ok, Pid} ->
       ok = oc_handler_mngr:init(),
       {ok, Pid};

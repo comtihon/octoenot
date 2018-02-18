@@ -57,7 +57,7 @@ kerl_installations(Executable) ->
 
 %% @private
 check_default_erlang(System, Installations) ->
-  {ok, Erl} = application:get_env(octocoon, default_erlang),
+  {ok, Erl} = application:get_env(octoenot, default_erlang),
   case proplists:get_value(Erl, Installations) of
     undefined when System /= Erl -> % no default erlang in kerl installation and in system
       error; % TODO should install it via kerl

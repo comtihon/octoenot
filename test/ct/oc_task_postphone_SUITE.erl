@@ -27,7 +27,7 @@ all() ->
 
 init_per_suite(Config) ->
   application:ensure_all_started(sqlite3),
-  application:set_env(octocoon, delay_between_build, 1),
+  application:set_env(octoenot, delay_between_build, 1),
   Config.
 
 init_per_testcase(_, Config) ->

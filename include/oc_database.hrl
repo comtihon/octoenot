@@ -8,7 +8,7 @@
 %%%-------------------------------------------------------------------
 -author("tihon").
 
--define(PACKAGES_STORAGE, coon_packages_db).
+-define(PACKAGES_STORAGE, enot_packages_db).
 -define(PACKAGES_TABLE, packages).
 
 -define(NAMESPACE_FIELD, namespace).
@@ -24,7 +24,7 @@
     {?ERLANG_FIELD, text}
   ]).
 
--define(TASKS_STORAGE, coon_tasks_db).
+-define(TASKS_STORAGE, enot_tasks_db).
 -define(TASKS_TABLE, tasks).
 
 -define(NAME_FIELD, name).

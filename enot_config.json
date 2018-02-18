@@ -1,5 +1,5 @@
 {
-  "name": "octocoon",
+  "name": "octoenot",
   "app_vsn": "1.0.0",
   "with_source": true,
   "erlang": [
@@ -56,12 +56,12 @@
     }
   ],
   "install": [
-    {"shell": "coon release"},
-    {"shell": "mkdir /var/log/octocoon"},
-    {"shell": "id -u octocoon &>/dev/null || useradd octocoon"},
-    {"shell": "chown -R octocoon /var/log/octocoon"},
-    {"shell": "cp _rel/octocoon/lib/octocoon-*/priv/octocoon.service /etc/systemd/system/"},
-    {"shell": "systemctl enable octocoon"},
-    {"shell": "systemctl start octocoon"}
+    {"release": {"rel_dir" : "/opt"}},
+    {"shell": "mkdir /var/log/octoenot"},
+    {"shell": "id -u octoenot &>/dev/null || useradd octoenot"},
+    {"shell": "chown -R octoenot /var/log/octoenot"},
+    {"shell": "cp _rel/octoenot/lib/octoenot-*/priv/octoenot.service /etc/systemd/system/"},
+    {"shell": "systemctl enable octoenot"},
+    {"shell": "systemctl start octoenot"}
   ]
 }

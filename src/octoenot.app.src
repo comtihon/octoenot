@@ -1,10 +1,10 @@
-{application, 'octocoon', [
+{application, 'octoenot', [
   {description, ""},
   {vsn, "{{ app.vsn }}"},
   {registered, []},
   {applications, {{ app.std_apps + app.apps + ['inets'] }}},
   {modules, {{ modules }}},
-  {mod, {'octocoon_app', []}},
+  {mod, {'octoenot_app', []}},
   {env,
     [
       {http_port, 4567},
@@ -22,7 +22,7 @@
            }
       },
       {delay_between_build, 1}, %% delay in minutes, which limits build frequency. 0 for no delay
-      {build_dir, "/tmp/octocoon"},
+      {build_dir, "/tmp/octoenot"},
       {email,
           #{
               username => "test@gmail.com",

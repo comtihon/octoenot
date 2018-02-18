@@ -28,10 +28,10 @@ erlang-stdlib
 
 
 EXPOSE 4567
-RUN pip3 install coon
+RUN pip3 install enot
 WORKDIR /opt/app
 COPY . /opt/app
 RUN coon release
 
-ENTRYPOINT ["/opt/app/_rel/octocoon/bin/octocoon", "foreground"]
+ENTRYPOINT ["/opt/app/_rel/octoenot/bin/octoenot", "foreground"]
 CMD []

@@ -20,9 +20,9 @@
 
 -spec get_priv_dir() -> string().
 get_priv_dir() ->
-  Path = case application:get_key(octocoon, vsn) of
+  Path = case application:get_key(octoenot, vsn) of
            {ok, VSNString} ->
-             "./lib/octocoon-" ++ VSNString;
+             "./lib/octoenot-" ++ VSNString;
            undefined ->
              {ok, Dir} = file:get_cwd(),
              Dir

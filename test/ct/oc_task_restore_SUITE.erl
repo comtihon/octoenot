@@ -42,7 +42,7 @@ end_per_testcase(_, Config) ->
 end_per_suite(Config) ->
   Config.
 
-%% Octocoon starts and have some tasks unfinished. Should finish them all
+%% Octoenot starts and have some tasks unfinished. Should finish them all
 test_restore_all_tasks(_) ->
   ct:pal("------------------~p------------------~n", [test_restore_all_tasks]),
 

@@ -13,5 +13,5 @@
 -define(REACH_NS_LIMIT, <<"Reached build limit for this repo">>).
 -define(BUILD_FAILURE, <<"Failed to build package">>).
 -define(LOAD_FAILURE, <<"Failed to load package">>).
--define(NOT_A_COON, <<"Coonfig.json not found">>).
+-define(NOT_A_ENOT, <<"enot_config.json not found">>).
 -define(WRONG_SIGNATURE, <<"Wrong signature">>).

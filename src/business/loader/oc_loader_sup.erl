@@ -67,7 +67,7 @@ init([]) ->
 %%%===================================================================
 %% @private
 form_pool_conf() ->
-  {ok, #{max_overflow := Overflow, size := Size}} = application:get_env(octocoon, loader_pool),
+  {ok, #{max_overflow := Overflow, size := Size}} = application:get_env(octoenot, loader_pool),
   [
     {worker_module, oc_loader},
     {name, {local, ?BUILDER_POOL}},

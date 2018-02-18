@@ -26,9 +26,9 @@ all() ->
 
 init_per_suite(Config) ->
   application:ensure_all_started(erlexec),
-  application:set_env(octocoon, disable_prebuild, true),
-  application:set_env(octocoon, default_erlang, "18"),
-  application:set_env(octocoon, loader_pool, #{max_overflow => 0, size => 1}),
+  application:set_env(octoenot, disable_prebuild, true),
+  application:set_env(octoenot, default_erlang, "18"),
+  application:set_env(octoenot, loader_pool, #{max_overflow => 0, size => 1}),
   Config.
 
 init_per_testcase(_, Config) ->
@@ -46,7 +46,7 @@ end_per_testcase(_, Config) ->
 end_per_suite(Config) ->
   Config.
 
-%% Request to build package without erl in coonfig.json - should build via default vsn
+%% Request to build package without erl in enotfig.json - should build via default vsn
 test_build_default(_) ->
   ct:pal("------------------~p------------------~n", [test_build_default]),
   {ok, _} = oc_loader_sup:start_link(),

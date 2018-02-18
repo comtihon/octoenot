@@ -28,7 +28,7 @@ all() ->
 init_per_suite(Config) ->
   application:ensure_all_started(erlexec),
   application:ensure_all_started(sqlite3),
-  application:set_env(octocoon, build_dir, oc_utils:get_priv_dir()),
+  application:set_env(octoenot, build_dir, oc_utils:get_priv_dir()),
   Config.
 
 init_per_testcase(_, Config) ->

@@ -9,7 +9,7 @@
 -module(oc_loader).
 -author("tihon").
 
--include("oc_coonfig.hrl").
+-include("oc_enotfig.hrl").
 -include("oc_error.hrl").
 
 -behaviour(gen_server).
@@ -53,8 +53,8 @@ start_link(Options) ->
 %%%===================================================================
 
 init([]) ->
-  {ok, Disable} = application:get_env(octocoon, disable_prebuild),
-  {ok, DefaultErl} = application:get_env(octocoon, default_erlang),
+  {ok, Disable} = application:get_env(octoenot, disable_prebuild),
+  {ok, DefaultErl} = application:get_env(octoenot, default_erlang),
   {ok, #state{disable_prebuild = Disable, default_erl = DefaultErl}}.
 
 handle_call({load, Name, Url, Tag}, _From, State = #state{disable_prebuild = Disable, default_erl = Default}) ->

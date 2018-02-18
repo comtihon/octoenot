@@ -22,7 +22,7 @@
 %% TODO install artifactory locally if not found?
 -spec init() -> ok.
 init() ->
-  {ok, Conf} = application:get_env(octocoon, artifactory),
+  {ok, Conf} = application:get_env(octoenot, artifactory),
   #{repo := Repo, host := Host} = Conf,
   true = is_artifactory_available(Host),
   true = is_repo_available(Host, Repo),
@@ -30,7 +30,7 @@ init() ->
 
 -spec load_package(binary(), binary(), string(), string()) -> true.
 load_package(Name, Tag, PackagePath, Erl) ->
-  {ok, Conf} = application:get_env(octocoon, artifactory),
+  {ok, Conf} = application:get_env(octoenot, artifactory),
   #{user := User, password := Pass, repo := Repo, host := Host} = Conf,
   PackageName = get_package_name(PackagePath),
   Path = get_package_url(Host, Repo, Name, Tag, Erl, PackageName),

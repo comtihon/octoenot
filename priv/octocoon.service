@@ -3,14 +3,14 @@ Wants=artifactory.service
 
 [Service]
 Type=simple
-User=octocoon
-Group=octocoon
-Environment=HOME=/home/octocoon
+User=octoenot
+Group=octoenot
+Environment=HOME=/home/octoenot
 Environment=SHELL=/bin/bash
-WorkingDirectory=/home/octocoon/
-ExecStart=/opt/octocoon/_rel/octocoon/bin/octocoon foreground
-ExecStop=/opt/octocoon/_rel/octocoon/bin/octocoon stop
-ExecReload=/opt/octocoon/_rel/octocoon/bin/octocoon restart
+WorkingDirectory=/home/octoenot/
+ExecStart=/opt/octoenot/_rel/octoenot/bin/octoenot foreground
+ExecStop=/opt/octoenot/_rel/octoenot/bin/octoenot stop
+ExecReload=/opt/octoenot/_rel/octoenot/bin/octoenot restart
 Restart=always
 
 [Install]

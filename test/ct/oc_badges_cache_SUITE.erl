@@ -46,15 +46,15 @@ end_per_suite(Config) ->
 test_lookup_and_remember(_) ->
   ct:pal("------------------~p------------------~n", [test_lookup_and_remember]),
   meck:new(oc_github_mngr),
-  meck:expect(oc_github_mngr, request_build_system, fun(_, _) -> <<"coon">> end),
+  meck:expect(oc_github_mngr, request_build_system, fun(_, _) -> <<"enot">> end),
 
   meck:new(oc_database_holder),
   meck:expect(oc_database_holder, get_info, fun(_, _) -> [] end),
 
   Badge = oc_badges_mngr:get_badge(<<"NS">>, <<"Package">>),
-  ?assertEqual({<<"not found">>, <<"coon">>, <<"unknown">>}, Badge),
+  ?assertEqual({<<"not found">>, <<"enot">>, <<"unknown">>}, Badge),
   timer:sleep(1),
-  ?assertEqual([{<<"NS/Package">>, <<"coon">>}], ets:tab2list(oc_badges_cache)),
+  ?assertEqual([{<<"NS/Package">>, <<"enot">>}], ets:tab2list(oc_badges_cache)),
 
   Badge = oc_badges_mngr:get_badge(<<"NS">>, <<"Package">>),
   ?assertEqual(1, meck:num_calls(oc_github_mngr, request_build_system, '_')),

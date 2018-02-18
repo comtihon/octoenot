@@ -9,22 +9,22 @@
 -module(oc_loader_logic).
 -author("tihon").
 
--include("oc_coonfig.hrl").
+-include("oc_enotfig.hrl").
 -include("oc_error.hrl").
 
--define(PACKAGE_CMD, "coon package").
+-define(PACKAGE_CMD, "enot package").
 
 %% API
 -export([check_config/3, build_package/2]).
 
 -spec check_config(string(), boolean(), string()) -> list(string()).
 check_config(Path, DisablePrebuild, DefaultErl) ->
-  case file:read_file(filename:join(Path, "coonfig.json")) of
+  case file:read_file(filename:join(Path, "enotfig.json")) of
     {ok, ConfigBin} ->
       Config = jsone:decode(ConfigBin, [{object_format, map}]),
       SecureConfig = disable_prebuild(Config, DisablePrebuild),
       get_erl(SecureConfig, DefaultErl);
-    {error, enoent} -> throw({error, ?NOT_A_COON})
+    {error, enoent} -> throw({error, ?NOT_A_enot})
   end.
 
 %% Build repo and generate package. Return path to the package

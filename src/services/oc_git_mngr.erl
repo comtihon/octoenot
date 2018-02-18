@@ -22,7 +22,7 @@
 clone_repo(FullName, Url, Tag) ->
   oc_logger:info("clone repo ~p ~p ~p", [FullName, Url, Tag]),
   oc_metrics_mngr:clone_request(),
-  {ok, Dir} = application:get_env(octocoon, build_dir),
+  {ok, Dir} = application:get_env(octoenot, build_dir),
   Path = filename:join([Dir, FullName]),
   Cmd = lists:flatten(io_lib:format(?CLONE_CMD, [Tag, Url, Path])),
   os:cmd("rm -Rf " ++ Path),

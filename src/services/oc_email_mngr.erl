@@ -17,13 +17,13 @@
 
 %% Just check if credentials are configured
 init() ->
-  {ok, Conf} = application:get_env(octocoon, email),
+  {ok, Conf} = application:get_env(octoenot, email),
   #{username := _, password := _} = Conf,
   ok.
 
 -spec send_mail(string(), string(), string()) -> boolean().
 send_mail(To, Subject, Message) ->
-  {ok, Conf} = application:get_env(octocoon, email),
+  {ok, Conf} = application:get_env(octoenot, email),
   #{username := From, password := Pass} = Conf,
   Msg = format_message(From, To, Subject, Message),
   Res = gen_smtp_client:send_blocking({From, [To], Msg},

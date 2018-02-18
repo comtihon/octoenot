@@ -23,7 +23,7 @@ all() ->
 
 init_per_suite(Config) ->
   BuildDir = oc_utils:get_priv_dir(),
-  application:set_env(octocoon, build_dir, BuildDir),
+  application:set_env(octoenot, build_dir, BuildDir),
   [{build_dir, BuildDir} | Config].
 
 init_per_testcase(_, Config) ->
@@ -42,13 +42,13 @@ test_get_build_system(_) ->
   ct:pal("------------------~p------------------~n", [test_get_build_system]),
   meck:new(oc_utils, [passthrough]),
   meck:expect(oc_utils, exec, fun(_, _) -> {ok, []} end),
-  {ok, Dir} = application:get_env(octocoon, build_dir),
-%%  populate coon app
-  PathC = filename:join([Dir, <<"ensure/ns/test_app_coon/">>]),
+  {ok, Dir} = application:get_env(octoenot, build_dir),
+%%  populate enot app
+  PathC = filename:join([Dir, <<"ensure/ns/test_app_enot/">>]),
   os:cmd("mkdir -p " ++ binary_to_list(PathC)),
-  file:write_file(filename:join([PathC, "coonfig.json"]), <<"">>),
+  file:write_file(filename:join([PathC, "enotfig.json"]), <<"">>),
   file:write_file(filename:join([PathC, "somefile"]), <<"">>),
-  ?assertEqual(<<"coon">>, oc_github_mngr:request_build_system(<<"ns">>, <<"test_app_coon">>)),
+  ?assertEqual(<<"enot">>, oc_github_mngr:request_build_system(<<"ns">>, <<"test_app_enot">>)),
 %%  populate rebar app
   PathR = filename:join([Dir, <<"ensure/ns/test_app_rebar">>]),
   os:cmd("mkdir -p " ++ binary_to_list(PathR)),

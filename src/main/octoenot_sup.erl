@@ -1,4 +1,4 @@
--module('octocoon_sup').
+-module('octoenot_sup').
 
 -behaviour(supervisor).
 

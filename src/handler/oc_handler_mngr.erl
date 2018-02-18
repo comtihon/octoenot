@@ -23,7 +23,7 @@ init() ->
 
 %% @private
 start_callback() ->
-  {ok, Port} = application:get_env(octocoon, http_port),
+  {ok, Port} = application:get_env(octoenot, http_port),
   Dispatch = ?ROUTES(
     [
       {"/callback", oc_callback_handler, #{}},
@@ -35,7 +35,7 @@ start_callback() ->
 
 %% @private
 start_mertics() ->
-  {ok, #{port := Port}} = application:get_env(octocoon, mertics),
+  {ok, #{port := Port}} = application:get_env(octoenot, mertics),
   Dispatch = ?ROUTES(
     [
       {"/statistics", oc_statistics_handler, #{}},

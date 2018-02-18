@@ -16,7 +16,7 @@
 
 -spec request_build_system(binary(), binary()) -> binary().
 request_build_system(Namespace, PackageName) ->
-  {ok, Dir} = application:get_env(octocoon, build_dir),
+  {ok, Dir} = application:get_env(octoenot, build_dir),
   Path = filename:join([Dir, <<"ensure">>, Namespace, PackageName]),
   Url = lists:flatten(io_lib:format(?GITHUB_URL, [Namespace, PackageName])),
   try oc_git_mngr:clone_with_depth_1(Url, Path) of
@@ -30,7 +30,7 @@ request_build_system(Namespace, PackageName) ->
 
 -spec get_signature(binary()) -> string().
 get_signature(Body) ->
-  {ok, #{secret := Secret}} = application:get_env(octocoon, github),
+  {ok, #{secret := Secret}} = application:get_env(octoenot, github),
   Hmac = crypto:hmac(sha256, Secret, Body),
   oc_utils:base16(Hmac).
 
@@ -38,8 +38,8 @@ get_signature(Body) ->
 %% @private
 get_build_system(Path) ->
   {ok, Names} = file:list_dir(Path),
-  IsCoon = lists:member("coonfig.json", Names),
+  Isenot = lists:member("enotfig.json", Names),
   IsRebar = lists:member("rebar.config", Names),
   IsErlangMk = lists:member("erlang.mk", Names),
-  BSList = [{IsCoon, <<"coon">>}, {IsRebar, <<"rebar">>}, {IsErlangMk, <<"erlang.mk">>}],
+  BSList = [{Isenot, <<"enot">>}, {IsRebar, <<"rebar">>}, {IsErlangMk, <<"erlang.mk">>}],
   proplists:get_value(true, BSList, <<"undefined">>).

@@ -57,7 +57,7 @@ try_notify_limit(Name, Url, Tag) ->
 
 %% @private
 try_get_email(Name, Url) ->
-  {ok, Dir} = application:get_env(octocoon, build_dir),
+  {ok, Dir} = application:get_env(octoenot, build_dir),
   Path = filename:join([Dir, <<"email">>, Name]),
   case oc_git_mngr:clone_with_depth_1(Url, Path) of
     true -> oc_git_mngr:get_last_commit_email(Path);
